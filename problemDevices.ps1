@@ -274,10 +274,29 @@ function Get-VocerLogUsers(){
 
 
 function Get-UserAuthentications(){
-    [regex]$authDateStampRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
-    [regex]$authTimeStampRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
-    [regex]$requestIDRegex = "(?<=Request[ ]ID[:]).+?(?=[,])"
-    [regex]$vmpIDRegex = "(?<=VMP[ ]ID[:]).+?(?=[,])"
+    $authLineList = [System.Collections.ArrayList]@()
+    foreach($file in $logFiles){
+        Get-Content $file | Select-String "Request ID:" | ForEach-Object{$authLineList.Add($_)}
+    }
+    foreach($authLine in $authLineList){
+        [regex]$authDateStampRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
+        [regex]$authTimeStampRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
+        [regex]$requestIDRegex = "(?<=Request[ ]ID[:]).+?(?=[,])"
+        [regex]$vmpIDRegex = "(?<=VMP[ ]ID[:]).+?(?=[,])"
+
+        $authenticationInstance = [VoceraUserAuthentications]::new()
+        $authenticationInstance.RequestDate = $authDateStampRegex.Matches($authLine) | ForEach-Object {$_}
+        $authenticationInstance.RequestTime = $authTimeStampRegex.Matches($authLine) | ForEach-Object {$_}
+        $authenticationInstance.requestID = $requestIDRegex.Matches($authLine) | ForEach-Object {$_}
+        $authenticationInstance.UserID = $vmpIDRegex.Matches($authLine) | ForEach-Object {$_}
+
+        foreach($user in $AllDevices.userList){
+            if($user.UserID -eq $authenticationInstance.UserID){
+                $user.authentications.Add($authenticationInstance)
+            }
+        }
+    }
+
 }
 
 
@@ -287,8 +306,8 @@ foreach($logPath in $logPathList){
 }
 
 
-# Write-LogFileList
 Get-VoceraDevices
 Get-VocerLogUsers
+Get-UserAuthentications
 Write-Host "LAUNCH WORK DONE" -ForegroundColor Green
 Open-Window
