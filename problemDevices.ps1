@@ -78,9 +78,43 @@ function Open-Window{
     $loadDeviceButton.Location = New-Object System.Drawing.Point(10,340)
     $loadDeviceButton.Height = 20
     $loadDeviceButton.Width = 125
-    $loadDeviceButton.TextAlign = $true
+    $loadDeviceButton.TextAlign
     $loadDeviceButton.Text = 'Load Device'
-
+    $loadDeviceButton.Add_Click({
+        $propertyArray= @('ClientType','ClientVersion','MAC','LogFrequency')
+        Write-Host "Clicked"
+        $selectedMAC = $clientMACBox.SelectedItem
+        Write-Host "Selected MAC:  $selectedMAC"
+        foreach($device in $AllDevices.deviceList){
+            Write-Host "Comparing $selectedMac to " $device.MAC
+            if($selectedMac -eq $device.MAC){
+                Write-Host "Match Found!" $device.MAC
+                $deviceDetailsLabelOffsetValue = 100
+                $device.PSObject.Properties| ForEach-Object{
+                    if($propertyArray -Contains $_.Name){
+                        Write-Host "Writing Trait:  " $_.Name
+                        # Check for and remove old information already loaded for a different device
+                        if($deviceTab.Controls.ContainsKey($_.Name)){
+                            Write-Host "Removing old label data" -ForegroundColor Green
+                            $deviceTab.Controls.RemoveByKey($_.Name)
+                        }
+                        else{
+                            $key = $_.Name
+                            Write-Host "No Key Found $key" -BackgroundColor Red
+                        }
+                        $label = New-Object System.Windows.Forms.Label
+                        $label.Text = $_.Value
+                        $label.Name = $_.Name
+                        $label.Location = New-Object System.Drawing.Point(350,$deviceDetailsLabelOffsetValue)
+                        $deviceTab.Controls.Add($label)
+                        $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
+                        $form.Refresh()
+                    }
+                }
+                break
+            }
+        }
+    })
 
     # Labels for device traits
     $deviceDetailsLabelOffsetValue = 100
