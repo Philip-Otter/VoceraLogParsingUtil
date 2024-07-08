@@ -10,13 +10,35 @@ $unknownFiles = [System.Collections.ArrayList]@()
 $logFiles = [System.Collections.ArrayList]@()
 $errorFiles = [System.Collections.ArrayList]@()
 $deviceDetailsList = [System.Collections.ArrayList]@()
+$userLineList = [System.Collections.ArrayList]@()
 $Form = [System.Windows.Forms.Form]::new()
 $applicationVersion = '0.1.0'
 $authorStamp = 'Philip Otter 2024'
 
+
+class VoceraUserAuthentications{
+    [string]    $RequestDate
+    [string]    $RequestTime
+    [string]    $requestID
+    [string]    $UserID
+    [bool]      $UserAuthenticated
+}
+
+
+class VoceraUser{
+    [string]    $UserName
+    [string]    $VocearID
+    [string]    $UserID
+
+    $authentications = [System.Collections.ArrayList]@()
+}
+
+
 class VoceraDeviceList{
     $deviceList = [System.Collections.ArrayList]@()
     $macList = [System.Collections.ArrayList]@()
+    $userList = [System.Collections.ArrayList]@()
+    $userNameList = [System.Collections.ArrayList]@()
 }
 
 class VoceraClientDevice {
@@ -57,13 +79,13 @@ function Open-Window{
     $tabControl.AutoSize = $true
     $tabControl.Anchor = 'Top,Left,Bottom,Right'
 
+    # Device Tab
     $deviceTab = New-Object System.Windows.Forms.TabPage
     $deviceTab.TabIndex = 1
     $deviceTab.Text = 'Devices'
 
     $clientMACBox = New-Object System.Windows.Forms.ListBox
     $clientMACBox.Location = New-Object System.Drawing.Point(10,40)
-    #$clientMACBox.Size = New-Object System.Drawing.Size(260,20)
     $clientMACBox.Height = 300
     $clientMACBox.Width = 125
     $clientMACBox.Sorted = $true
@@ -129,6 +151,7 @@ function Open-Window{
     # Add Elements to Device Tab
     $deviceTab.Controls.AddRange(@($clientMACBox,$loadDeviceButton))
 
+    # Found Files Tab
     $foundFilesTab = New-Object System.Windows.Forms.TabPage
     $foundFilesTab.TabIndex = 2
     $foundFilesTab.Text = 'Found Files'
@@ -150,8 +173,26 @@ function Open-Window{
     # Add elements to Found Files tab
     $foundFilesTab.Controls.Add($foundFilesBox)
 
+    # Users Tab
+    $usersTab = New-Object System.Windows.Forms.tabPage
+    $usersTab.TabIndex = 3
+    $usersTab.Text = 'Users'
+
+    $usersBox = New-Object System.Windows.Forms.ListBox
+    $usersBox.Location = New-Object System.Drawing.Point(10,40)
+    $usersBox.Height = 300
+    $usersBox.Width = 175
+    $usersBox.Sorted = $true
+
+    foreach($userName in $AllDevices.userNameList){
+        $usersBox.Items.Add($userName)
+    }
+
+    # Add Elements to Users Tab
+    $usersTab.Controls.AddRange(@($usersBox))
+
     # Add tabpages to tab control
-    $tabControl.Controls.AddRange(@($deviceTab, $foundFilesTab))
+    $tabControl.Controls.AddRange(@($deviceTab, $foundFilesTab,$usersTab))
     
     # Add items to main form
     $form.Controls.Add($footerLabel)
@@ -208,14 +249,46 @@ function Get-VoceraDevices(){
     }
 }
 
+
+function Get-VocerLogUsers(){
+    foreach($file in $logFiles){
+        Get-Content $file | Select-String "user Found," | ForEach-Object{$userLineList.Add($_)}
+    }foreach($userLine in $userLineList){
+        [regex]$usersNameRegex = "(?<=found[,][ ]name:[ ]).+?(?=[,])"
+        [regex]$usersIDRegex = "(?<=[,][ ][ ]id[:][ ]).+?(?=[,])"
+        [regex]$usersVoiceIDRegex = "(?<=[,][ ]voice[ ]id[:][ ]).+"
+
+        $voceraUser = [VoceraUser]::new()
+        $voceraUser.UserName = $usersNameRegex.Matches($userLine) | ForEach-Object {$_.value}
+        $voceraUser.UserID = $usersIDRegex.Matches($userLine) | ForEach-Object {$_}
+        $voceraUser.VocearID = $usersVoiceIDRegex.Matches($userLine) | ForEach-Object {$_}
+
+        if($AllDevices.userNameList -contains $voceraUser.UserName){
+            Write-Host -ForegroundColor Yellow $VoceraUser.UserName " - Appeared Again"
+        }else{
+            $AllDevices.userNameList.Add($voceraUser.UserName)
+            $AllDevices.userList.Add($voceraUser)
+        }
+    }
+}
+
+
+function Get-UserAuthentications(){
+    [regex]$authDateStampRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
+    [regex]$authTimeStampRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
+    [regex]$requestIDRegex = "(?<=Request[ ]ID[:]).+?(?=[,])"
+    [regex]$vmpIDRegex = "(?<=VMP[ ]ID[:]).+?(?=[,])"
+}
+
+
 $AllDevices = [VoceraDeviceList]::new()
 foreach($logPath in $logPathList){
     Get-LogFiles($logPath)
 }
 
+
 # Write-LogFileList
 Get-VoceraDevices
-Write-Host "Done" -ForegroundColor Red
-$AllDevices | Select-Object * | Format-Table -AutoSize
-$AllDevices.deviceList[0]
+Get-VocerLogUsers
+Write-Host "LAUNCH WORK DONE" -ForegroundColor Green
 Open-Window
