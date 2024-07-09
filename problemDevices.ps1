@@ -27,7 +27,7 @@ class VoceraUserAuthentications{
 
 class VoceraUser{
     [string]    $UserName
-    [string]    $VocearID
+    [string]    $VoceraID = "N/A"
     [string]    $UserID
 
     $authentications = [System.Collections.ArrayList]@()
@@ -54,6 +54,7 @@ class VoceraClientDevice {
 function Open-Window{
     Write-Host "Starting GUI" -backgroundColor gray
     $voceraDeviceTraits = @('Client Type', 'Client Version', 'MAC Address', 'Log Frequency')
+    $voceraUserTraits = @('Name','Voice ID','VMP ID','Auth Count')
 
     function Draw{
         $form.ShowDialog()
@@ -183,13 +184,71 @@ function Open-Window{
     $usersBox.Height = 300
     $usersBox.Width = 175
     $usersBox.Sorted = $true
+    
 
     foreach($userName in $AllDevices.userNameList){
         $usersBox.Items.Add($userName)
     }
 
+     # Button to load User
+     $loadUserButton = New-Object System.Windows.Forms.Button
+     $loadUserButton.Location = New-Object System.Drawing.Point(10,340)
+     $loadUserButton.Height = 20
+     $loadUserButton.Width = 175
+     $loadUserButton.TextAlign
+     $loadUserButton.Text = 'Load User'
+     $loadUserButton.Add_Click({
+         $propertyArray= @('UserName','VoceraID','UserID','authentications')
+         Write-Host "Clicked"
+         $selectedUser = $usersBox.SelectedItem
+         Write-Host "Selected User ID:  $selectedUser"
+         foreach($voceraUser in $AllDevices.userList){
+             Write-Host "Comparing $selectedUser to " $voceraUser.UserName
+             if($selectedUser -eq $voceraUser.UserName){
+                 Write-Host "Match Found!" $voceraUser.UserName
+                 $deviceDetailsLabelOffsetValue = 100
+                 $voceraUser.PSObject.Properties| ForEach-Object{
+                     if($propertyArray -Contains $_.Name){
+                         Write-Host "Writing Trait:  " $_.Name
+                         # Check for and remove old information already loaded for a different device
+                         if($usersTab.Controls.ContainsKey($_.Name)){
+                             Write-Host "Removing old label data" -ForegroundColor Green
+                             $usersTab.Controls.RemoveByKey($_.Name)
+                         }
+                         else{
+                             $key = $_.Name
+                             Write-Host "No Key Found $key" -BackgroundColor Red
+                         }
+                         $label = New-Object System.Windows.Forms.Label
+                         $label.Name = $_.Name
+                         $label.Location = New-Object System.Drawing.Point(350,$deviceDetailsLabelOffsetValue)
+                         $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
+                         if($_.Name -eq 'authentications'){
+                            $label.Text = $_.Length
+                         }else{
+                            $label.Text = $_.Value
+                         }
+                         $usersTab.Controls.Add($label)
+                         $form.Refresh()
+                     }
+                 }
+                break
+             }
+         }
+     })
+
+    # Labels for User traits
+    $userDetailsLabelOffsetValue = 100
+    foreach($trait in $voceraUserTraits){
+        $label = New-Object System.Windows.Forms.Label
+        $label.Text = $trait+":"
+        $label.Location = New-Object System.Drawing.Point(250,$userDetailsLabelOffsetValue)
+        $usersTab.Controls.Add($label)
+        $userDetailsLabelOffsetValue = $userDetailsLabelOffsetValue + 50
+    }
+
     # Add Elements to Users Tab
-    $usersTab.Controls.AddRange(@($usersBox))
+    $usersTab.Controls.AddRange(@($usersBox,$loadUserButton))
 
     # Add tabpages to tab control
     $tabControl.Controls.AddRange(@($deviceTab, $foundFilesTab,$usersTab))
@@ -261,7 +320,7 @@ function Get-VocerLogUsers(){
         $voceraUser = [VoceraUser]::new()
         $voceraUser.UserName = $usersNameRegex.Matches($userLine) | ForEach-Object {$_.value}
         $voceraUser.UserID = $usersIDRegex.Matches($userLine) | ForEach-Object {$_}
-        $voceraUser.VocearID = $usersVoiceIDRegex.Matches($userLine) | ForEach-Object {$_}
+        $voceraUser.VoceraID = $usersVoiceIDRegex.Matches($userLine) | ForEach-Object {$_}
 
         if($AllDevices.userNameList -contains $voceraUser.UserName){
             Write-Host -ForegroundColor Yellow $VoceraUser.UserName " - Appeared Again"
