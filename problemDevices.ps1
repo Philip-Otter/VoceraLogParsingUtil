@@ -24,6 +24,8 @@ class VMPServer{
     [string]    $LastDistCacheTimeDuration = "--"
     [string]    $LastHTTPServerStartDate = "-/-/-"
     [string]    $LastHTTPServerStartTime = "-:-:-"
+    [string]    $LastHTTPPort = "<-->"
+    [string]    $lastHTTPSPort = "<-->"
 }
 
 class VoceraUserAuthentications{
@@ -394,10 +396,12 @@ function Get-VMPServerInformation(){
     $userCacheList = [System.Collections.ArrayList]::new()
     $distCacheList = [System.Collections.ArrayList]::new()
     $startHTTPServerList = [System.Collections.ArrayList]::new()
+    $portListHTTP = [System.Collections.ArrayList]::new()
     foreach($file in $logFiles){
         Get-Content $file | Select-String "Users cache." | ForEach-Object{$userCacheList.Add($_)}
         Get-Content $file | Select-String "DistLists cache." | ForEach-Object{$distCacheList.Add($_)}
         Get-Content $file | Select-String "Starting HTTP server ..." | ForEach-Object{$startHTTPServerList.Add($_)}
+        Get-Content $file | Select-String "HTTP interface activated on" | ForEach-Object{$portListHTTP.Add($_)}
     }
     foreach($userLine in $userCacheList){
         [regex]$userCacheRegex = "(?<=Users[ ]cache[.][ ]).+?(?=[ ]users)"
@@ -435,6 +439,13 @@ function Get-VMPServerInformation(){
 
         $VMPServer.LastHTTPServerStartDate = $startHTTPDateStampRegex.Matches($startHTTPLine) | ForEach-Object {$_.Value}
         $VMPServer.LastHTTPServerStartTime = $startHTTPTimeStampRegex.Matches($startHTTPLine) | ForEach-Object {$_.value}
+    }
+    foreach($portLineHTTP in $portListHTTP){
+        [regex]$portHTTPRegex = "(?<=interface[ ]activated[ ]on[ ]\<\*\>\,[ ]port[ ]\<).+?(?=\>)"
+        [regex]$portHTTPSRegex = "(?<=interface[ ]is[ ]activated[ ]on[ ]\<\*\>\,[ ]port[ ]\<).+?(?=\>)"
+
+        $VMPServer.LastHTTPPort = $portHTTPRegex.Matches($portLineHTTP) | ForEach-Object {$_.Value}
+        $VMPServer.LastHTTPSPort = $portHTTPSRegex.Matches($portLineHTTP) | ForEach-Object {$_.Value}
     }
 }
 
