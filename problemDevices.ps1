@@ -6,11 +6,9 @@ Philip Otter 2024
 Add-Type -AssemblyName System.Windows.Forms
 
 $logPathList = @("./Logs")
-$unknownFiles = [System.Collections.ArrayList]@()
-$logFiles = [System.Collections.ArrayList]@()
-$errorFiles = [System.Collections.ArrayList]@()
-$deviceDetailsList = [System.Collections.ArrayList]@()
-$userLineList = [System.Collections.ArrayList]@()
+$unknownFiles = [System.Collections.ArrayList]::new()
+$logFiles = [System.Collections.ArrayList]::new()
+$errorFiles = [System.Collections.ArrayList]::new()
 $Form = [System.Windows.Forms.Form]::new()
 $applicationVersion = '0.1.0'
 $authorStamp = 'Philip Otter 2024'
@@ -35,10 +33,10 @@ class VoceraUser{
 
 
 class VoceraDeviceList{
-    $deviceList = [System.Collections.ArrayList]@()
-    $macList = [System.Collections.ArrayList]@()
-    $userList = [System.Collections.ArrayList]@()
-    $userNameList = [System.Collections.ArrayList]@()
+    $deviceList = [System.Collections.ArrayList]::new()
+    $macList = [System.Collections.ArrayList]::new()
+    $userList = [System.Collections.ArrayList]::new()
+    $userNameList = [System.Collections.ArrayList]::new()
 }
 
 class VoceraClientDevice {
@@ -280,6 +278,7 @@ function Get-LogFiles($path){
 
 
 function Get-VoceraDevices(){
+    $deviceDetailsList = [System.Collections.ArrayList]::new()
     foreach($file in $logFiles){
         Get-Content $file | Select-String "Client details" -CaseSensitive | ForEach-Object{$deviceDetailsList.Add($_)}
     }
@@ -292,9 +291,7 @@ function Get-VoceraDevices(){
 
         $mac = $MACRegex.Matches($deviceDetails) | ForEach-Object {$_.Value}
         
-        if($AllDevices.macList -contains $mac){
-            Write-Host -ForegroundColor Yellow $mac " - Appeared Again"
-        }else{
+        if($AllDevices.macList -notcontains $mac){
             $device = [VoceraClientDevice]::new()
             $device.ClientType = $clientTypeRegex.Matches($deviceDetails) | ForEach-Object {$_.Value}
             $device.ClientProto = $clientProtoRegex.Matches($deviceDetails) | ForEach-Object {$_.Value}
@@ -310,6 +307,7 @@ function Get-VoceraDevices(){
 
 
 function Get-VocerLogUsers(){
+    $userLineList = [System.Collections.ArrayList]::new()
     foreach($file in $logFiles){
         Get-Content $file | Select-String "user Found," | ForEach-Object{$userLineList.Add($_)}
     }foreach($userLine in $userLineList){
@@ -318,13 +316,11 @@ function Get-VocerLogUsers(){
         [regex]$usersVoiceIDRegex = "(?<=[,][ ]voice[ ]id[:][ ]).+"
 
         $voceraUser = [VoceraUser]::new()
-        $voceraUser.UserName = $usersNameRegex.Matches($userLine) | ForEach-Object {$_.value}
-        $voceraUser.UserID = $usersIDRegex.Matches($userLine) | ForEach-Object {$_}
-        $voceraUser.VoceraID = $usersVoiceIDRegex.Matches($userLine) | ForEach-Object {$_}
+        $voceraUser.UserName = $usersNameRegex.Matches($userLine) | ForEach-Object {$_.Value}
+        $voceraUser.UserID = $usersIDRegex.Matches($userLine) | ForEach-Object {$_.Value}
+        $voceraUser.VoceraID = $usersVoiceIDRegex.Matches($userLine) | ForEach-Object {$_.Value}
 
-        if($AllDevices.userNameList -contains $voceraUser.UserName){
-            Write-Host -ForegroundColor Yellow $VoceraUser.UserName " - Appeared Again"
-        }else{
+        if($AllDevices.userNameList -notcontains $voceraUser.UserName){
             $AllDevices.userNameList.Add($voceraUser.UserName)
             $AllDevices.userList.Add($voceraUser)
         }
@@ -333,7 +329,7 @@ function Get-VocerLogUsers(){
 
 
 function Get-UserAuthentications(){
-    $authLineList = [System.Collections.ArrayList]@()
+    $authLineList = [System.Collections.ArrayList]::new()
     foreach($file in $logFiles){
         Get-Content $file | Select-String "Request ID:" | ForEach-Object{$authLineList.Add($_)}
     }
@@ -344,10 +340,10 @@ function Get-UserAuthentications(){
         [regex]$vmpIDRegex = "(?<=VMP[ ]ID[:]).+?(?=[,])"
 
         $authenticationInstance = [VoceraUserAuthentications]::new()
-        $authenticationInstance.RequestDate = $authDateStampRegex.Matches($authLine) | ForEach-Object {$_}
-        $authenticationInstance.RequestTime = $authTimeStampRegex.Matches($authLine) | ForEach-Object {$_}
-        $authenticationInstance.requestID = $requestIDRegex.Matches($authLine) | ForEach-Object {$_}
-        $authenticationInstance.UserID = $vmpIDRegex.Matches($authLine) | ForEach-Object {$_}
+        $authenticationInstance.RequestDate = $authDateStampRegex.Matches($authLine) | ForEach-Object {$_.Value}
+        $authenticationInstance.RequestTime = $authTimeStampRegex.Matches($authLine) | ForEach-Object {$_.Value}
+        $authenticationInstance.requestID = $requestIDRegex.Matches($authLine) | ForEach-Object {$_.Value}
+        $authenticationInstance.UserID = $vmpIDRegex.Matches($authLine) | ForEach-Object {$_.Value}
 
         foreach($user in $AllDevices.userList){
             if($user.UserID -eq $authenticationInstance.UserID){
