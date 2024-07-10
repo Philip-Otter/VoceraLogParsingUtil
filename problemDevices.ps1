@@ -13,6 +13,18 @@ $Form = [System.Windows.Forms.Form]::new()
 $applicationVersion = '0.1.0'
 $authorStamp = 'Philip Otter 2024'
 
+class VMPServer{
+    [string]    $LastUserCache = "N/A"
+    [string]    $LastUserCacheDate = "-/-/-"
+    [string]    $LastUserCacheTime = "-:-:-"
+    [string]    $LastUserCacheTimeDuration = "--"
+    [string]    $LastDistCache = "N/A"
+    [string]    $LastDistCacheDate = "-/-/-"
+    [string]    $LastDistCacheTime = "-:-:-"
+    [string]    $LastDistCacheTimeDuration = "--"
+    [string]    $LastHTTPServerStartDate = "-/-/-"
+    [string]    $LastHTTPServerStartTime = "-:-:-"
+}
 
 class VoceraUserAuthentications{
     [string]    $RequestDate
@@ -353,8 +365,57 @@ function Get-UserAuthentications(){
 
 }
 
+function Get-VMPServerInformation(){
+    $userCacheList = [System.Collections.ArrayList]::new()
+    $distCacheList = [System.Collections.ArrayList]::new()
+    $startHTTPServerList = [System.Collections.ArrayList]::new()
+    foreach($file in $logFiles){
+        Get-Content $file | Select-String "Users cache." | ForEach-Object{$userCacheList.Add($_)}
+        Get-Content $file | Select-String "DistLists cache." ForEach-Object{$distCacheList.Add($_)}
+        Get-Content $file | Select-String "Starting HTTP server ..." ForEach-Object{$startHTTPServerList.Add($_)}
+    }
+    foreach($userLine in $userCacheList){
+        [regex]$userCacheRegex = "(?<=Users[ ]cache[.][ ]).+?(?=[ ]users)"
+        [regex]$userCachingDurationRegex = "(?<=\(ms\)\:[ ]).+"
+        [regex]$userDateStampRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
+        [regex]$userTimeStampRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
+
+        $numberOfCachedUsers = $userCacheRegex.Matches($userLine) | ForEach-Object {$_.Value}
+
+        if($numberOfCachedUsers -ne "Loading"){  # Exlude all "Users cache. Loading users cache" lines from updating VMPServer object
+            $VMPServer.LastUserCache = $numberOfCachedUsers
+            $VMPServer.LastUserCacheTimeDuration = $userCachingDurationRegex.Matches($userLine) | ForEach-Object {$_.Value}
+            $VMPServer.LastUserCacheDate = $userDateStampRegex.Matches($userLine) | ForEach-Object {$_.Value}
+            $VMPServer.LastUserCacheTime = $userTimeStampRegex.Matches($userLine) | ForEach-Object {$_.Value}
+        }
+    }
+    foreach($distLine in $distCacheList){
+        [regex]$distCacheRegex = "/(?<=DistLists[ ]cache\.[ ]).+?(?=[ ]dist)"
+        [regex]$distCachingDurationRegex = "(?<=\(ms\)\:[ ]).+"
+        [regex]$distDateStampRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
+        [regex]$distTimeStampRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
+
+        $numberOfCachedDists = $distCacheRegex.Matches($distLine) | ForEach-Object {$_.Value}
+
+        if($numberOfCachedDists -ne "Loading"){
+            $VMPServer.LastDistCache = $numberOfCachedDists
+            $VMPServer.LastDistCacheTimeDuration = $distCachingDurationRegex.Matches($distLine) | ForEach-Object {$_.Value}
+            $VMPServer.LastDistCacheDate = $distDateStampRegex.Matches($distLine) | ForEach-Object {$_.Value}
+            $VMPServer.LastDistCacheTime = $distTimeStampRegex.Matches($distLine) | ForEach-Object {$_.Value}
+        }
+    }
+    foreach($startHTTPLine in $startHTTPServerList){
+        [regex]$startHTTPDateStampRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
+        [regex]$startHTTPTimeStampRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
+
+        $VMPServer.LastHTTPServerStartDate = $startHTTPDateStampRegex.Matches($startHTTPLine) | ForEach-Object {$_.Value}
+        $VMPServer.LastHTTPServerStartTime = $startHTTPTimeStampRegex.Matches($startHTTPLine) | ForEach-Object {$_.value}
+    }
+}
+
 
 $AllDevices = [VoceraDeviceList]::new()
+$VMPServer = [VMPServer]::new()
 foreach($logPath in $logPathList){
     Get-LogFiles($logPath)
 }
