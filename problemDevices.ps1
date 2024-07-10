@@ -65,6 +65,8 @@ function Open-Window{
     Write-Host "Starting GUI" -backgroundColor gray
     $voceraDeviceTraits = @('Client Type', 'Client Version', 'MAC Address', 'Log Frequency')
     $voceraUserTraits = @('Name','Voice ID','VMP ID','Auth Count')
+    $VMPServerTraitsA = @('Users Cached','User Cache Date','User Cache Time','Caching Time (ms)', 'HTTP Start Date', 'HTTP Start Time')
+    $VMPServerTraitsB = @('DLs Cached','DL Cache Date','DL Cache Time','Caching Time (ms)')
 
     function Draw{
         $form.ShowDialog()
@@ -259,8 +261,31 @@ function Open-Window{
     # Add Elements to Users Tab
     $usersTab.Controls.AddRange(@($usersBox,$loadUserButton))
 
+    # VMP Server Tab
+    $VMPServerTab = New-Object System.Windows.Forms.TabPage
+    $VMPServerTab.TabIndex = 4
+    $VMPServerTab.Text = 'VMP Server'
+
+    # Labels for VMP Server Traits
+    $deviceDetailsLabelOffsetValue = 50
+    foreach($trait in $VMPServerTraitsA){
+        $label = New-Object System.Windows.Forms.Label
+        $label.Text = $trait+":"
+        $label.Location = New-Object System.Drawing.Point(10,$deviceDetailsLabelOffsetValue)
+        $VMPServerTab.Controls.Add($label)
+        $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
+    }
+    $deviceDetailsLabelOffsetValue = 50
+    foreach($trait in $VMPServerTraitsB){
+        $label = New-Object System.Windows.Forms.Label
+        $label.Text = $trait+":"
+        $label.Location = New-Object System.Drawing.Point(250,$deviceDetailsLabelOffsetValue)
+        $VMPServerTab.Controls.Add($label)
+        $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
+    }
+
     # Add tabpages to tab control
-    $tabControl.Controls.AddRange(@($foundFilesTab, $deviceTab, $usersTab))
+    $tabControl.Controls.AddRange(@($foundFilesTab, $deviceTab, $usersTab, $VMPServerTab))
     
     # Add items to main form
     $form.Controls.Add($footerLabel)
@@ -371,8 +396,8 @@ function Get-VMPServerInformation(){
     $startHTTPServerList = [System.Collections.ArrayList]::new()
     foreach($file in $logFiles){
         Get-Content $file | Select-String "Users cache." | ForEach-Object{$userCacheList.Add($_)}
-        Get-Content $file | Select-String "DistLists cache." ForEach-Object{$distCacheList.Add($_)}
-        Get-Content $file | Select-String "Starting HTTP server ..." ForEach-Object{$startHTTPServerList.Add($_)}
+        Get-Content $file | Select-String "DistLists cache." | ForEach-Object{$distCacheList.Add($_)}
+        Get-Content $file | Select-String "Starting HTTP server ..." | ForEach-Object{$startHTTPServerList.Add($_)}
     }
     foreach($userLine in $userCacheList){
         [regex]$userCacheRegex = "(?<=Users[ ]cache[.][ ]).+?(?=[ ]users)"
@@ -427,5 +452,7 @@ Write-Host "Building Users" -ForegroundColor Cyan
 Get-VocerLogUsers
 Write-Host "Finding Authentications" -ForegroundColor Cyan
 Get-UserAuthentications
+Write-Host "Gathering VMP Server Information" -ForegroundColor Cyan
+Get-VMPServerInformation
 Write-Host "LAUNCH WORK DONE" -ForegroundColor Green
 Open-Window
