@@ -78,9 +78,31 @@ function Open-Window{
     $tabControl.AutoSize = $true
     $tabControl.Anchor = 'Top,Left,Bottom,Right'
 
+    # Found Files Tab
+    $foundFilesTab = New-Object System.Windows.Forms.TabPage
+    $foundFilesTab.TabIndex = 1
+    $foundFilesTab.Text = 'Found Files'
+
+    $foundFilesBox = New-Object System.Windows.Forms.ListBox
+    $foundFilesBox.Location = New-Object System.Drawing.Point(10,40)
+    $foundFilesBox.Size = New-Object System.Drawing.Size(260,20)
+    $foundFilesBox.Height = 300
+    $foundFilesBox.Width = 350
+    $foundFilesBox.HorizontalScrollbar = $true
+
+    foreach($file in $logFiles){
+        $foundFilesBox.Items.Add($file)
+    }
+    foreach($file in $errorFiles){
+        $foundFilesBox.Items.Add($file)
+    }
+
+    # Add elements to Found Files tab
+    $foundFilesTab.Controls.Add($foundFilesBox)
+
     # Device Tab
     $deviceTab = New-Object System.Windows.Forms.TabPage
-    $deviceTab.TabIndex = 1
+    $deviceTab.TabIndex = 2
     $deviceTab.Text = 'Devices'
 
     $clientMACBox = New-Object System.Windows.Forms.ListBox
@@ -90,7 +112,6 @@ function Open-Window{
     $clientMACBox.Sorted = $true
 
     foreach($mac in $AllDevices.macList){
-        Write-Host $mac
         $clientMACBox.Items.Add($mac)
     }
 
@@ -149,28 +170,6 @@ function Open-Window{
 
     # Add Elements to Device Tab
     $deviceTab.Controls.AddRange(@($clientMACBox,$loadDeviceButton))
-
-    # Found Files Tab
-    $foundFilesTab = New-Object System.Windows.Forms.TabPage
-    $foundFilesTab.TabIndex = 2
-    $foundFilesTab.Text = 'Found Files'
-
-    $foundFilesBox = New-Object System.Windows.Forms.ListBox
-    $foundFilesBox.Location = New-Object System.Drawing.Point(10,40)
-    $foundFilesBox.Size = New-Object System.Drawing.Size(260,20)
-    $foundFilesBox.Height = 300
-    $foundFilesBox.Width = 350
-    $foundFilesBox.HorizontalScrollbar = $true
-
-    foreach($file in $logFiles){
-        $foundFilesBox.Items.Add($file)
-    }
-    foreach($file in $errorFiles){
-        $foundFilesBox.Items.Add($file)
-    }
-
-    # Add elements to Found Files tab
-    $foundFilesTab.Controls.Add($foundFilesBox)
 
     # Users Tab
     $usersTab = New-Object System.Windows.Forms.tabPage
@@ -249,7 +248,7 @@ function Open-Window{
     $usersTab.Controls.AddRange(@($usersBox,$loadUserButton))
 
     # Add tabpages to tab control
-    $tabControl.Controls.AddRange(@($deviceTab, $foundFilesTab,$usersTab))
+    $tabControl.Controls.AddRange(@($foundFilesTab, $deviceTab, $usersTab))
     
     # Add items to main form
     $form.Controls.Add($footerLabel)
@@ -361,8 +360,11 @@ foreach($logPath in $logPathList){
 }
 
 
+Write-Host "Building Devices" -ForegroundColor Cyan
 Get-VoceraDevices
+Write-Host "Building Users" -ForegroundColor Cyan
 Get-VocerLogUsers
+Write-Host "Finding Authentications" -ForegroundColor Cyan
 Get-UserAuthentications
 Write-Host "LAUNCH WORK DONE" -ForegroundColor Green
 Open-Window
