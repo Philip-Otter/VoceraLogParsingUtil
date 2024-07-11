@@ -25,7 +25,7 @@ class VMPServer{
     [string]    $LastHTTPServerStartDate = "-/-/-"
     [string]    $LastHTTPServerStartTime = "-:-:-"
     [string]    $LastHTTPPort = "<-->"
-    [string]    $lastHTTPSPort = "<-->"
+    [string]    $LastHTTPSPort = "<-->"
 }
 
 class VoceraUserAuthentications{
@@ -278,14 +278,36 @@ function Open-Window{
             }elseif($VMPServerTraitsB -contains $trait){
                 $horrizontalOffset = 250
             }
-            else{
-                Write-Host "FAIL" -BackgroundColor Red
-            }
             $label = New-Object System.Windows.Forms.Label
             $label.Text = $trait+":"
             $label.Location = New-Object System.Drawing.Point($horrizontalOffset,$deviceDetailsLabelOffsetValue)
             $VMPServerTab.Controls.Add($label)
             $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
+        }
+    }
+
+    # VMP Server traits
+    $deviceDetailsLabelOffsetValueA = 50
+    $deviceDetailsLabelOffsetValueB = 50
+    $VMPServer.PSObject.Properties| ForEach-Object{
+        $sideA = @('LastUserCache', 'LastUserCacheDate', 'LastUserCacheTime', 'LastUserCacheTimeDuration', 'LastHTTPServerStartDate', 'LastHTTPServerStartTime')
+        $sideB = @('LastDistCache', 'LastDistCacheDate', 'LastDistCacheTime', 'LastDistCacheTimeDuration', 'LastDistCacheTimeDuration', 'LastHTTPPort', 'LastHTTPSPort')
+        if($sideA -contains $_.Name){
+            $horrizontalOffset = 130
+            $label = New-Object System.Windows.Forms.Label
+            $label.Text = $_.Value
+            $label.Location = New-Object System.Drawing.Point($horrizontalOffset,$deviceDetailsLabelOffsetValueA)
+            $VMPServerTab.Controls.Add($label)
+            $deviceDetailsLabelOffsetValueA = $deviceDetailsLabelOffsetValueA + 50
+        }elseif($sideB -contains $_.Name){
+            $horrizontalOffset = 370
+            $label = New-Object System.Windows.Forms.Label
+            $label.Text = $_.Value
+            $label.Location = New-Object System.Drawing.Point($horrizontalOffset,$deviceDetailsLabelOffsetValueB)
+            $VMPServerTab.Controls.Add($label)
+            $deviceDetailsLabelOffsetValueB = $deviceDetailsLabelOffsetValueB + 50
+        }else{
+            Write-Host "FAILED" -BackgroundColor Red
         }
     }
 
@@ -407,7 +429,7 @@ function Get-VMPServerInformation(){
         Get-Content $file | Select-String "HTTP interface activated on" | ForEach-Object{$portListHTTP.Add($_)}
     }
     foreach($userLine in $userCacheList){
-        [regex]$userCacheRegex = "(?<=Users[ ]cache[.][ ]).+?(?=[ ]users)"
+        [regex]$userCacheRegex = "(?<=Users[ ]cache[.][ ])[0-9]+?(?=[ ]users)"
         [regex]$userCachingDurationRegex = "(?<=\(ms\)\:[ ]).+"
         [regex]$userDateStampRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
         [regex]$userTimeStampRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
@@ -461,11 +483,11 @@ foreach($logPath in $logPathList){
 
 
 Write-Host "Building Devices" -ForegroundColor Cyan
-Get-VoceraDevices
+#Get-VoceraDevices
 Write-Host "Building Users" -ForegroundColor Cyan
-Get-VocerLogUsers
+#Get-VocerLogUsers
 Write-Host "Finding Authentications" -ForegroundColor Cyan
-Get-UserAuthentications
+#Get-UserAuthentications
 Write-Host "Gathering VMP Server Information" -ForegroundColor Cyan
 Get-VMPServerInformation
 Write-Host "LAUNCH WORK DONE" -ForegroundColor Green
