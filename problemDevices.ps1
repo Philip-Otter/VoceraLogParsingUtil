@@ -38,9 +38,10 @@ class VoceraUserAuthentications{
 
 
 class VoceraUser{
-    [string]    $UserName
+    [string]    $UserName = "--"
     [string]    $VoceraID = "N/A"
-    [string]    $UserID
+    [string]    $UserID = "--"
+    [string]    $SiteID = "--"
 
     $authentications = [System.Collections.ArrayList]@()
 }
@@ -66,7 +67,7 @@ class VoceraClientDevice {
 function Open-Window{
     Write-Host "Starting GUI" -backgroundColor gray
     $voceraDeviceTraits = @('Client Type', 'Client Version', 'MAC Address', 'Log Frequency')
-    $voceraUserTraits = @('Name','Voice ID','VMP ID','Auth Count')
+    $voceraUserTraits = @('Name','Voice ID','VMP ID', 'Site ID', 'Auth Count')
     $VMPServerTraitsA = @('Users Cached','User Cache Date','User Cache Time','Caching Time (ms)', 'HTTP Start Date', 'HTTP Start Time')
     $VMPServerTraitsB = @('DLs Cached','DL Cache Date','DL Cache Time','Caching Time (ms)', 'HTTP Port', 'HTTPS Port')
 
@@ -211,7 +212,7 @@ function Open-Window{
      $loadUserButton.TextAlign
      $loadUserButton.Text = 'Load User'
      $loadUserButton.Add_Click({
-         $propertyArray= @('UserName','VoceraID','UserID','authentications')
+         $propertyArray= @('UserName','VoceraID','UserID', 'SiteID', 'authentications')
          Write-Host "Clicked"
          $selectedUser = $usersBox.SelectedItem
          Write-Host "Selected User ID:  $selectedUser"
@@ -364,6 +365,23 @@ function Get-VoceraDevices(){
 
             $AllDevices.deviceList.Add($device)
             $AllDevices.macList.Add($device.MAC)
+        }
+    }
+}
+
+
+function Get-UserIDAssociations($UserID){
+    $siteIDList = [System.Collections.ArrayList]::new()
+    foreach($file in $logFiles){
+        Get-Content $file | Select-String "in database, UserID: $userID" | ForEach-Object{$siteIDList.Add($_)}
+    }
+    foreach($siteIDLine in $siteIDList){
+        [regex]$siteIDRegex = "(?<=\,[ ]SiteID\:[ ]).+"
+        Write-Host $siteIDLine -BackgroundColor Gray
+    }
+    foreach($VMPUser in $AllDevices.userList){
+        if($VMPUser.UserID -eq $userID){
+            $VMPUser.SiteID = $siteIDRegex.Matches($siteIDLine) | ForEach-Object {$_.Value}
         }
     }
 }
