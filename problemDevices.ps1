@@ -422,11 +422,13 @@ function Get-VMPServerInformation(){
     $distCacheList = [System.Collections.ArrayList]::new()
     $startHTTPServerList = [System.Collections.ArrayList]::new()
     $portListHTTP = [System.Collections.ArrayList]::new()
+    $portListHTTPS = [System.Collections.ArrayList]::new()
     foreach($file in $logFiles){
-        Get-Content $file | Select-String "Users cache." | ForEach-Object{$userCacheList.Add($_)}
-        Get-Content $file | Select-String "DistLists cache." | ForEach-Object{$distCacheList.Add($_)}
+        Get-Content $file | Select-String "Users cache. [0-9]" | ForEach-Object{$userCacheList.Add($_)}
+        Get-Content $file | Select-String "DistLists cache. [0-9]" | ForEach-Object{$distCacheList.Add($_)}
         Get-Content $file | Select-String "Starting HTTP server ..." | ForEach-Object{$startHTTPServerList.Add($_)}
         Get-Content $file | Select-String "HTTP interface activated on" | ForEach-Object{$portListHTTP.Add($_)}
+        Get-Content $file | Select-String "HTTPs interface is activated" | ForEach-Object{$portListHTTPS.Add($_)}
     }
     foreach($userLine in $userCacheList){
         [regex]$userCacheRegex = "(?<=Users[ ]cache[.][ ])[0-9]+?(?=[ ]users)"
@@ -436,7 +438,7 @@ function Get-VMPServerInformation(){
 
         $numberOfCachedUsers = $userCacheRegex.Matches($userLine) | ForEach-Object {$_.Value}
 
-        if($numberOfCachedUsers -ne "Loading"){  # Exlude all "Users cache. Loading users cache" lines from updating VMPServer object
+        if($numberOfCachedUsers -ne "0"){ 
             $VMPServer.LastUserCache = $numberOfCachedUsers
             $VMPServer.LastUserCacheTimeDuration = $userCachingDurationRegex.Matches($userLine) | ForEach-Object {$_.Value}
             $VMPServer.LastUserCacheDate = $userDateStampRegex.Matches($userLine) | ForEach-Object {$_.Value}
@@ -444,14 +446,14 @@ function Get-VMPServerInformation(){
         }
     }
     foreach($distLine in $distCacheList){
-        [regex]$distCacheRegex = "/(?<=DistLists[ ]cache\.[ ]).+?(?=[ ]dist)"
+        [regex]$distCacheRegex = "(?<=DistLists[ ]cache\.[ ]).+?(?=[ ]dist)"
         [regex]$distCachingDurationRegex = "(?<=\(ms\)\:[ ]).+"
         [regex]$distDateStampRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
         [regex]$distTimeStampRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
 
         $numberOfCachedDists = $distCacheRegex.Matches($distLine) | ForEach-Object {$_.Value}
 
-        if($numberOfCachedDists -ne "Loading"){
+        if($numberOfCachedDists -ne "0"){
             $VMPServer.LastDistCache = $numberOfCachedDists
             $VMPServer.LastDistCacheTimeDuration = $distCachingDurationRegex.Matches($distLine) | ForEach-Object {$_.Value}
             $VMPServer.LastDistCacheDate = $distDateStampRegex.Matches($distLine) | ForEach-Object {$_.Value}
@@ -467,10 +469,13 @@ function Get-VMPServerInformation(){
     }
     foreach($portLineHTTP in $portListHTTP){
         [regex]$portHTTPRegex = "(?<=interface[ ]activated[ ]on[ ]\<\*\>\,[ ]port[ ]\<).+?(?=\>)"
-        [regex]$portHTTPSRegex = "(?<=interface[ ]is[ ]activated[ ]on[ ]\<\*\>\,[ ]port[ ]\<).+?(?=\>)"
 
         $VMPServer.LastHTTPPort = $portHTTPRegex.Matches($portLineHTTP) | ForEach-Object {$_.Value}
-        $VMPServer.LastHTTPSPort = $portHTTPSRegex.Matches($portLineHTTP) | ForEach-Object {$_.Value}
+    }
+    foreach($portLineHTTPS in $portListHTTPS){
+        [regex]$portHTTPSRegex = "(?<=interface[ ]is[ ]activated[ ]on[ ]\<\*\>\,[ ]port[ ]\<).+?(?=\>)"
+
+        $VMPServer.LastHTTPSPort = $portHTTPSRegex.Matches($portLineHTTPS) | ForEach-Object {$_.Value}
     }
 }
 
@@ -483,11 +488,11 @@ foreach($logPath in $logPathList){
 
 
 Write-Host "Building Devices" -ForegroundColor Cyan
-#Get-VoceraDevices
+Get-VoceraDevices
 Write-Host "Building Users" -ForegroundColor Cyan
-#Get-VocerLogUsers
+Get-VocerLogUsers
 Write-Host "Finding Authentications" -ForegroundColor Cyan
-#Get-UserAuthentications
+Get-UserAuthentications
 Write-Host "Gathering VMP Server Information" -ForegroundColor Cyan
 Get-VMPServerInformation
 Write-Host "LAUNCH WORK DONE" -ForegroundColor Green
