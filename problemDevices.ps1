@@ -269,21 +269,24 @@ function Open-Window{
     $VMPServerTab.Text = 'VMP Server'
 
     # Labels for VMP Server Traits
-    $deviceDetailsLabelOffsetValue = 50
-    foreach($trait in $VMPServerTraitsA){
-        $label = New-Object System.Windows.Forms.Label
-        $label.Text = $trait+":"
-        $label.Location = New-Object System.Drawing.Point(10,$deviceDetailsLabelOffsetValue)
-        $VMPServerTab.Controls.Add($label)
-        $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
-    }
-    $deviceDetailsLabelOffsetValue = 50
-    foreach($trait in $VMPServerTraitsB){
-        $label = New-Object System.Windows.Forms.Label
-        $label.Text = $trait+":"
-        $label.Location = New-Object System.Drawing.Point(250,$deviceDetailsLabelOffsetValue)
-        $VMPServerTab.Controls.Add($label)
-        $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
+    $VMPServerTraitArray = @($VMPServerTraitsA, $VMPServerTraitsB)
+    foreach($traitList in $VMPServerTraitArray){
+        $deviceDetailsLabelOffsetValue = 50
+        foreach($trait in $traitList){
+            if($VMPServerTraitsA -contains $trait){
+                $horrizontalOffset = 10
+            }elseif($VMPServerTraitsB -contains $trait){
+                $horrizontalOffset = 250
+            }
+            else{
+                Write-Host "FAIL" -BackgroundColor Red
+            }
+            $label = New-Object System.Windows.Forms.Label
+            $label.Text = $trait+":"
+            $label.Location = New-Object System.Drawing.Point($horrizontalOffset,$deviceDetailsLabelOffsetValue)
+            $VMPServerTab.Controls.Add($label)
+            $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
+        }
     }
 
     # Add tabpages to tab control
