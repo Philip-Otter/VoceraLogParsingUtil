@@ -55,12 +55,21 @@ class VoceraDeviceList{
 }
 
 class VoceraClientDevice {
-    [string]    $ClientType
-    [string]    $ClientProto
-    [string]    $ClientVersion
-    [string]    $MAC
-    [string]    $ClientLocalTime
+    # General Vocera Client Traits
+    [string]    $ClientType = "--" # Houses mobile client OS as well
+    [string]    $ClientProto = "--"
+    [string]    $ClientVersion = "-.-.-"
+    [string]    $MAC = "--"
+    [string]    $SSID = "--"
     [int]       $LogFrequency = 1
+
+    [bool]      $IsMobileDevice = $false
+
+    # Mobile Device Specific Traits
+    [string]    $MobileClientPIN
+    [string]    $MobileClientOSVersion
+    [string]    $MobileClientModel
+    [string]    $MobileClientCarrier
 }
 
 
@@ -343,15 +352,16 @@ function Get-LogFiles($path){
 
 function Get-VoceraDevices(){
     $deviceDetailsList = [System.Collections.ArrayList]::new()
+    $mobileDetailsList = [System.Collections.ArrayList]::new()
     foreach($file in $logFiles){
         Get-Content $file | Select-String "Client details" -CaseSensitive | ForEach-Object{$deviceDetailsList.Add($_)}
+        Get-Content $file | Select-String "service\: \/WIC\, querystring\: PIN" | ForEach-Object{$mobileDetailsList.Add($_)}
     }
     foreach($deviceDetails in $deviceDetailsList){
         [regex]$clientTypeRegex = "(?<=clientType[:]).+?(?=[,])"
         [regex]$clientProtoRegex = "(?<=clientProto[:]).+?(?=[,])"
         [regex]$clientVersionRegex = "(?<=clientVersion[:]).+?(?=[,])"
         [regex]$MACRegex = "(?<=mac[:]).+?(?=[,])"
-        [regex]$clientLocalTimeRegex = "(?<=clientLocalTime[:]).+"
 
         $mac = $MACRegex.Matches($deviceDetails) | ForEach-Object {$_.Value}
         
@@ -361,10 +371,38 @@ function Get-VoceraDevices(){
             $device.ClientProto = $clientProtoRegex.Matches($deviceDetails) | ForEach-Object {$_.Value}
             $device.ClientVersion = $clientVersionRegex.Matches($deviceDetails) | ForEach-Object {$_.Value}
             $device.MAC = $mac
-            $device.ClientLocalTime = $clientLocalTimeRegex.Matches($deviceDetails) | ForEach-Object {$_.Value}
 
             $AllDevices.deviceList.Add($device)
             $AllDevices.macList.Add($device.MAC)
+        }
+    }
+    foreach($mobileDetails in $mobileDetailsList){
+        [regex]$mobilePIN = "(?<=WIC\,[ ]querystring\:[ ]PIN\=).+?(\&=?)"  # VCS PIN. THIS VALUE SHOULD ALMOST ALWAYS BE OBSCURED ex. 'PIN=*****'
+        [regex]$mobileProto = "(?<=proto\=).+?(?=\&)"
+        [regex]$mobileVersion = "(?<=\&ver\=).+?(?=\%)"
+        [regex]$mobileDeviceOS = "(?<=[0-9][0-9]\%20).+?(?=\&)"
+        [regex]$mobileDeviceOSVersion = "(?<=deviceModel\=).+?(?=\&)"
+        [regex]$mobileDeviceModel = "(?<=deviceModel\=).+?(?=\&)"
+        [regex]$mobileDeviceMAC = "(?<=MAC\=).+?(?=\&)"
+        [regex]$mobileDeviceSSID = "(?<=SSID\=).+?(?=\&)"
+        [regex]$mobileDeviceCarrier = "(?<=carrier\=).+?(?=\&)"
+
+        $mac = $mobileDeviceMAC.Match($mobileDetails) | ForEach-Object {$_.Value}
+
+        if($AllDevices.macList -notcontains $mac){
+            $mobileDevice = [VoceraClientDevice]::new()
+            $mobileDevice.MAC = $mac
+            $mobileDevice.MobileClientPIN = $mobilePIN.Matches($mobileDetails) | ForEach-Object {$_.Value}
+            $mobileDevice.ClientProto = $mobileProto.Matches($mobileDetails) | ForEach-Object {$_.value}
+            $mobileDevice.ClientVersion = $mobileVersion.Matches($mobileDetails) | ForEach-Object {$_.value}
+            $mobileDevice.MobileClientOSVersion = $mobileDeviceOSVersion.Matches($mobileDetails) | ForEach-Object {$_.Value}
+            $mobileDevice.ClientType = $mobileDeviceOS.Matches($mobileDetails) | ForEach-Object {$_.Value}
+            $mobileDevice.MobileClientModel = $mobileDeviceModel.Matches($mobileDetails) | ForEach-Object {$_.Value}
+            $mobileDevice.SSID = $mobileDeviceSSID.Matches($mobileDetails) | ForEach-Object {$_.value}
+            $mobileDevice.MobileClientCarrier = $mobileDeviceCarrier.Matches($mobileDetails) | ForEach-Object {$_.Value}
+
+            $AllDevices.deviceList.Add($mobileDevice)
+            $AllDevices.macList.Add($mobileDevice.MAC)
         }
     }
 }
