@@ -68,7 +68,7 @@ function Open-Window{
     $voceraDeviceTraits = @('Client Type', 'Client Version', 'MAC Address', 'Log Frequency')
     $voceraUserTraits = @('Name','Voice ID','VMP ID','Auth Count')
     $VMPServerTraitsA = @('Users Cached','User Cache Date','User Cache Time','Caching Time (ms)', 'HTTP Start Date', 'HTTP Start Time')
-    $VMPServerTraitsB = @('DLs Cached','DL Cache Date','DL Cache Time','Caching Time (ms)')
+    $VMPServerTraitsB = @('DLs Cached','DL Cache Date','DL Cache Time','Caching Time (ms)', 'HTTP Port', 'HTTPS Port')
 
     function Draw{
         $form.ShowDialog()
