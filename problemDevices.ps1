@@ -1,5 +1,5 @@
 <#
-Locate Problem Devices in Vocera VMP logs
+A script to make looking through VMP logs easier
 Philip Otter 2024
 #>
 
