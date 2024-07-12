@@ -76,6 +76,7 @@ class VoceraClientDevice {
 function Open-Window{
     Write-Host "Starting GUI" -backgroundColor gray
     $voceraDeviceTraits = @('Client Type', 'Client Version', 'MAC Address', 'Log Frequency')
+    $voceraMobileDeviceTraits = @('Client Type', 'OS Version', 'VCS Version', 'MAC Address', 'Model', 'SSID', 'Carrier')
     $voceraUserTraits = @('Name','Voice ID','VMP ID', 'Site ID', 'Auth Count')
     $VMPServerTraitsA = @('Users Cached','User Cache Date','User Cache Time','Caching Time (ms)', 'HTTP Start Date', 'HTTP Start Time')
     $VMPServerTraitsB = @('DLs Cached','DL Cache Date','DL Cache Time','Caching Time (ms)', 'HTTP Port', 'HTTPS Port')
@@ -149,7 +150,8 @@ function Open-Window{
     $loadDeviceButton.TextAlign
     $loadDeviceButton.Text = 'Load Device'
     $loadDeviceButton.Add_Click({
-        $propertyArray= @('ClientType','ClientVersion','MAC','LogFrequency')
+        $propertyArray = @('ClientType','ClientVersion','MAC','LogFrequency')
+        $mobilePropertyArray = @('ClientType', 'MobileClientOSVersion', 'ClientVersion', 'MAC', 'MobileClientModel', 'SSID', 'MobileClientCarrier')
         Write-Host "Clicked"
         $selectedMAC = $clientMACBox.SelectedItem
         Write-Host "Selected MAC:  $selectedMAC"
@@ -400,6 +402,7 @@ function Get-VoceraDevices(){
             $mobileDevice.MobileClientModel = $mobileDeviceModel.Matches($mobileDetails) | ForEach-Object {$_.Value}
             $mobileDevice.SSID = $mobileDeviceSSID.Matches($mobileDetails) | ForEach-Object {$_.value}
             $mobileDevice.MobileClientCarrier = $mobileDeviceCarrier.Matches($mobileDetails) | ForEach-Object {$_.Value}
+            $mobileDevice.IsMobileDevice = $true
 
             $AllDevices.deviceList.Add($mobileDevice)
             $AllDevices.macList.Add($mobileDevice.MAC)
