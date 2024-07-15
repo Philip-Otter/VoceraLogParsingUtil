@@ -4,6 +4,7 @@ Philip Otter 2024
 #>
 
 Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Web
 
 $logPathList = @("./Logs")
 $unknownFiles = [System.Collections.ArrayList]::new()
@@ -189,7 +190,7 @@ function Open-Window{
                         $device.PSObject.Properties| ForEach-Object{
                             if($mobilePropertyArray -Contains $_.Name){
                                 $label = New-Object System.Windows.Forms.Label
-                                $label.Text = $_.Value
+                                $label.Text = [System.Web.HttpUtility]::UrlDecode($_.Value)
                                 $label.Name = $_.Name
                                 $label.Location = New-Object System.Drawing.Point(350,$traitLabelOffsetValue)
                                 $deviceTab.Controls.Add($label)
