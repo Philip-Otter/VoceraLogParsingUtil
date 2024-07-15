@@ -68,7 +68,7 @@ class VoceraClientDevice {
     [int]       $LogFrequency = 1
 
     # Behind the scenes
-    [string]    $MobileClientPIN
+    [string]    $MobileClientPIN = "----"
     [bool]      $IsMobileDevice = $false
 
     $connectionIDList = [System.Collections.ArrayList]::new()
@@ -231,8 +231,25 @@ function Open-Window{
         }
     })
 
+    # Button to get all object (device) properties
+    $deviceObjectPropertiesButton = New-Object System.Windows.Forms.Button
+    $deviceObjectPropertiesButton.Location = New-Object System.Drawing.Point(10,360)
+    $deviceObjectPropertiesButton.Height = 20
+    $deviceObjectPropertiesButton.Width = 125
+    $deviceObjectPropertiesButton.TextAlign
+    $deviceObjectPropertiesButton.Text = 'Object Properties'
+    $deviceObjectPropertiesButton.Add_Click({
+        $selectedMAC = $clientMACBox.SelectedItem
+        foreach($device in $AllDevices.deviceList){
+            if($device.MAC -eq $selectedMAC){
+                $device | Select-Object * | Out-GridView
+                break
+            }
+        }
+    })
+
     # Add Elements to Device Tab
-    $deviceTab.Controls.AddRange(@($clientMACBox,$loadDeviceButton))
+    $deviceTab.Controls.AddRange(@($clientMACBox, $loadDeviceButton, $deviceObjectPropertiesButton))
 
     # Users Tab
     $usersTab = New-Object System.Windows.Forms.tabPage
