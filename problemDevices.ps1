@@ -416,9 +416,9 @@ function Get-VoceraDevices(){
     foreach($mobileDetails in $mobileDetailsList){
         [regex]$mobilePIN = "(?<=WIC\,[ ]querystring\:[ ]PIN\=).+?(\&=?)"  # VCS PIN. THIS VALUE SHOULD ALMOST ALWAYS BE OBSCURED ex. 'PIN=*****'
         [regex]$mobileProto = "(?<=proto\=).+?(?=\&)"
-        [regex]$mobileVersion = "(?<=\&ver\=).+?(?=\%)"
+        [regex]$mobileVersion = "(?<=\&ver\=).+?(?=\&)"  #"(?<=\&ver\=).+?(?=\%)"
         [regex]$mobileDeviceOS = "(?<=[0-9][0-9]\%20).+?(?=\&)"
-        [regex]$mobileDeviceOSVersion = "(?<=deviceModel\=).+?(?=\&)"
+        [regex]$mobileDeviceOSVersion = "(?<=osVersion\=).+?(?=\&)"  #"(?<=deviceModel\=).+?(?=\&)"
         [regex]$mobileDeviceModel = "(?<=deviceModel\=).+?(?=\&)"
         [regex]$mobileDeviceMAC = "(?<=MAC\=).+?(?=\&)"
         [regex]$mobileDeviceSSID = "(?<=SSID\=).+?(?=\&)"
