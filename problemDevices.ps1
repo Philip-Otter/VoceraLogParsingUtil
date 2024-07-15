@@ -56,7 +56,7 @@ class VoceraDeviceList{
 }
 
 class VoceraClientDevice {
-    # General Vocera Client Traits
+    # Get drawn on the form
     [string]    $ClientType = "--" # Houses mobile client OS as well
     [string]    $MobileClientOSVersion = "-.-.-"
     [string]    $ClientProto = "--"
@@ -67,9 +67,11 @@ class VoceraClientDevice {
     [string]    $MobileClientCarrier = "--"
     [int]       $LogFrequency = 1
 
+    # Behind the scenes
+    [string]    $MobileClientPIN
     [bool]      $IsMobileDevice = $false
 
-    [string]    $MobileClientPIN
+    $connectionIDList = [System.Collections.ArrayList]::new()
 }
 
 
@@ -421,8 +423,10 @@ function Get-VoceraDevices(){
         [regex]$mobileDeviceMAC = "(?<=MAC\=).+?(?=\&)"
         [regex]$mobileDeviceSSID = "(?<=SSID\=).+?(?=\&)"
         [regex]$mobileDeviceCarrier = "(?<=carrier\=).+?(?=\&)"
+        [regex]$mobileDeviceConnectionID = "(?<=\{)[0-9].+?(?=})"
 
         $mac = $mobileDeviceMAC.Match($mobileDetails) | ForEach-Object {$_.Value}
+        $tempConnectionID = $mobileDeviceConnectionID.Matches($mobileDetails) | ForEach-Object {$_.value}
 
         if($AllDevices.macList -notcontains $mac){
             $mobileDevice = [VoceraClientDevice]::new()
@@ -435,10 +439,20 @@ function Get-VoceraDevices(){
             $mobileDevice.MobileClientModel = $mobileDeviceModel.Matches($mobileDetails) | ForEach-Object {$_.Value}
             $mobileDevice.SSID = $mobileDeviceSSID.Matches($mobileDetails) | ForEach-Object {$_.value}
             $mobileDevice.MobileClientCarrier = $mobileDeviceCarrier.Matches($mobileDetails) | ForEach-Object {$_.Value}
+            $mobileDevice.connectionIDList.Add($tempConnectionID)
             $mobileDevice.IsMobileDevice = $true
-
+            
             $AllDevices.deviceList.Add($mobileDevice)
             $AllDevices.macList.Add($mobileDevice.MAC)
+        }else{
+            foreach($device in $AllDevices.deviceList){
+                if($device.MAC -eq $mac){
+                    $device.LogFrequency++
+                    if($device.connectionIDList -notcontains $tempConnectionID){
+                        $device.connectionIDList.Add($tempConnectionID)
+                    }
+                }    
+            }
         }
     }
 }
