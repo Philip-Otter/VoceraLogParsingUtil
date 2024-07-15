@@ -57,26 +57,25 @@ class VoceraDeviceList{
 class VoceraClientDevice {
     # General Vocera Client Traits
     [string]    $ClientType = "--" # Houses mobile client OS as well
+    [string]    $MobileClientOSVersion = "-.-.-"
     [string]    $ClientProto = "--"
     [string]    $ClientVersion = "-.-.-"
     [string]    $MAC = "--"
+    [string]    $MobileClientModel = "--"
     [string]    $SSID = "--"
+    [string]    $MobileClientCarrier = "--"
     [int]       $LogFrequency = 1
 
     [bool]      $IsMobileDevice = $false
 
-    # Mobile Device Specific Traits
     [string]    $MobileClientPIN
-    [string]    $MobileClientOSVersion
-    [string]    $MobileClientModel
-    [string]    $MobileClientCarrier
 }
 
 
 function Open-Window{
     Write-Host "Starting GUI" -backgroundColor gray
     $voceraDeviceTraits = @('Client Type', 'Client Version', 'MAC Address', 'Log Frequency')
-    $voceraMobileDeviceTraits = @('Client Type', 'OS Version', 'VCS Version', 'MAC Address', 'Model', 'SSID', 'Carrier')
+    $voceraMobileDeviceTraits = @('Client Type', 'OS Version', 'VCS Version', 'MAC Address', 'Model', 'SSID', 'Carrier', 'Log Frequency')
     $voceraUserTraits = @('Name','Voice ID','VMP ID', 'Site ID', 'Auth Count')
     $VMPServerTraitsA = @('Users Cached','User Cache Date','User Cache Time','Caching Time (ms)', 'HTTP Start Date', 'HTTP Start Time')
     $VMPServerTraitsB = @('DLs Cached','DL Cache Date','DL Cache Time','Caching Time (ms)', 'HTTP Port', 'HTTPS Port')
@@ -151,7 +150,7 @@ function Open-Window{
     $loadDeviceButton.Text = 'Load Device'
     $loadDeviceButton.Add_Click({
         $propertyArray = @('ClientType','ClientVersion','MAC','LogFrequency')
-        $mobilePropertyArray = @('ClientType', 'MobileClientOSVersion', 'ClientVersion', 'MAC', 'MobileClientModel', 'SSID', 'MobileClientCarrier')
+        $mobilePropertyArray = @('ClientType', 'MobileClientOSVersion', 'ClientVersion', 'MAC', 'MobileClientModel', 'SSID', 'MobileClientCarrier', 'LogFrequency')
         Write-Host "Clicked"
         $selectedMAC = $clientMACBox.SelectedItem
         Write-Host "Selected MAC:  $selectedMAC"
@@ -159,42 +158,75 @@ function Open-Window{
             Write-Host "Comparing $selectedMac to " $device.MAC
             if($selectedMac -eq $device.MAC){
                 Write-Host "Match Found!" $device.MAC
-                $deviceDetailsLabelOffsetValue = 100
-                $device.PSObject.Properties| ForEach-Object{
-                    if($propertyArray -Contains $_.Name){
-                        Write-Host "Writing Trait:  " $_.Name
-                        # Check for and remove old information already loaded for a different device
-                        if($deviceTab.Controls.ContainsKey($_.Name)){
-                            Write-Host "Removing old label data" -ForegroundColor Green
-                            $deviceTab.Controls.RemoveByKey($_.Name)
-                        }
-                        else{
-                            $key = $_.Name
-                            Write-Host "No Key Found $key" -BackgroundColor Red
-                        }
-                        $label = New-Object System.Windows.Forms.Label
-                        $label.Text = $_.Value
-                        $label.Name = $_.Name
-                        $label.Location = New-Object System.Drawing.Point(350,$deviceDetailsLabelOffsetValue)
-                        $deviceTab.Controls.Add($label)
-                        $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
-                        $form.Refresh()
-                    }
+                
+                # Clean up the labels on the devices tab
+                foreach($item in $propertyArray) {
+                    $deviceTab.Controls.RemoveByKey($item)
                 }
+                foreach($item in $voceraDeviceTraits){
+                    $deviceTab.Controls.RemoveByKey($item)
+                }
+                foreach($item in $mobilePropertyArray){
+                    $deviceTab.Controls.RemoveByKey($item)
+                }
+                foreach($item in $voceraMobileDeviceTraits){
+                    $deviceTab.Controls.RemoveByKey($item)
+                }
+
+                    if($device.IsMobileDevice){
+                        # Labels for device traits
+                        $deviceDetailsLabelOffsetValue = 50
+                        foreach($trait in $voceraMobileDeviceTraits){
+                            $label = New-Object System.Windows.Forms.Label
+                            $label.Name = $trait
+                            $label.Text = $trait+":"
+                            $label.Location = New-Object System.Drawing.Point(225,$deviceDetailsLabelOffsetValue)
+                            $deviceTab.Controls.Add($label)
+                            $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
+                        }
+
+                        $traitLabelOffsetValue = 50
+                        $device.PSObject.Properties| ForEach-Object{
+                            if($mobilePropertyArray -Contains $_.Name){
+                                $label = New-Object System.Windows.Forms.Label
+                                $label.Text = $_.Value
+                                $label.Name = $_.Name
+                                $label.Location = New-Object System.Drawing.Point(350,$traitLabelOffsetValue)
+                                $deviceTab.Controls.Add($label)
+                                $traitLabelOffsetValue = $traitLabelOffsetValue + 50
+                                $form.Refresh()
+                            }
+                        }
+                    }
+                    else{
+                        $traitLabelOffsetValue = 100
+
+                        # Labels for device traits
+                        $deviceDetailsLabelOffsetValue = 100
+                        foreach($trait in $voceraDeviceTraits){
+                            $label = New-Object System.Windows.Forms.Label
+                            $label.Name = $trait
+                            $label.Text = $trait+":"
+                            $label.Location = New-Object System.Drawing.Point(225,$deviceDetailsLabelOffsetValue)
+                            $deviceTab.Controls.Add($label)
+                            $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
+                        }
+                        $device.PSObject.Properties| ForEach-Object{
+                            if($propertyArray -Contains $_.Name){
+                                $label = New-Object System.Windows.Forms.Label
+                                $label.Text = $_.Value
+                                $label.Name = $_.Name
+                                $label.Location = New-Object System.Drawing.Point(350,$traitLabelOffsetValue)
+                                $deviceTab.Controls.Add($label)
+                                $traitLabelOffsetValue = $traitLabelOffsetValue + 50
+                                $form.Refresh()
+                            }
+                        }
+                    }
                 break
             }
         }
     })
-
-    # Labels for device traits
-    $deviceDetailsLabelOffsetValue = 100
-    foreach($trait in $voceraDeviceTraits){
-        $label = New-Object System.Windows.Forms.Label
-        $label.Text = $trait+":"
-        $label.Location = New-Object System.Drawing.Point(225,$deviceDetailsLabelOffsetValue)
-        $deviceTab.Controls.Add($label)
-        $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
-    }
 
     # Add Elements to Device Tab
     $deviceTab.Controls.AddRange(@($clientMACBox,$loadDeviceButton))
