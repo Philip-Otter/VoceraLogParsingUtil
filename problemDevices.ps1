@@ -191,11 +191,13 @@ function Open-Window{
                         $traitLabelOffsetValue = 50
                         $device.PSObject.Properties| ForEach-Object{
                             if($mobilePropertyArray -Contains $_.Name){
-                                $label = New-Object System.Windows.Forms.Label
-                                $label.Text = [System.Web.HttpUtility]::UrlDecode($_.Value)
-                                $label.Name = $_.Name
-                                $label.Location = New-Object System.Drawing.Point(350,$traitLabelOffsetValue)
-                                $deviceTab.Controls.Add($label)
+                                $textBox = New-Object System.Windows.Forms.TextBox
+                                $textBox.Text = [System.Web.HttpUtility]::UrlDecode($_.Value)
+                                $textBox.Name = $_.Name
+                                $textBox.BorderStyle = 0
+                                $textBox.BackColor = $form.BackColor
+                                $textBox.Location = New-Object System.Drawing.Point(350,$traitLabelOffsetValue)
+                                $deviceTab.Controls.Add($textBox)
                                 $traitLabelOffsetValue = $traitLabelOffsetValue + 50
                                 $form.Refresh()
                             }
@@ -216,11 +218,13 @@ function Open-Window{
                         }
                         $device.PSObject.Properties| ForEach-Object{
                             if($propertyArray -Contains $_.Name){
-                                $label = New-Object System.Windows.Forms.Label
-                                $label.Text = $_.Value
-                                $label.Name = $_.Name
-                                $label.Location = New-Object System.Drawing.Point(350,$traitLabelOffsetValue)
-                                $deviceTab.Controls.Add($label)
+                                $textBox = New-Object System.Windows.Forms.TextBox
+                                $textBox.Text = $_.Value
+                                $textBox.Name = $_.Name
+                                $textBox.BorderStyle = 0
+                                $textBox.BackColor = $form.BackColor
+                                $textBox.Location = New-Object System.Drawing.Point(350,$traitLabelOffsetValue)
+                                $deviceTab.Controls.Add($textBox)
                                 $traitLabelOffsetValue = $traitLabelOffsetValue + 50
                                 $form.Refresh()
                             }
@@ -289,23 +293,20 @@ function Open-Window{
                          Write-Host "Writing Trait:  " $_.Name
                          # Check for and remove old information already loaded for a different device
                          if($usersTab.Controls.ContainsKey($_.Name)){
-                             Write-Host "Removing old label data" -ForegroundColor Green
                              $usersTab.Controls.RemoveByKey($_.Name)
                          }
-                         else{
-                             $key = $_.Name
-                             Write-Host "No Key Found $key" -BackgroundColor Red
-                         }
-                         $label = New-Object System.Windows.Forms.Label
-                         $label.Name = $_.Name
-                         $label.Location = New-Object System.Drawing.Point(350,$deviceDetailsLabelOffsetValue)
+                         $textBox = New-Object System.Windows.Forms.TextBox
+                         $textBox.Name = $_.Name
+                         $textBox.BorderStyle = 0
+                         $textBox.BackColor = $form.BackColor
+                         $textBox.Location = New-Object System.Drawing.Point(350,$deviceDetailsLabelOffsetValue)
                          $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
                          if($_.Name -eq 'authentications'){
-                            $label.Text = $_.Length
+                            $textBox.Text = $_.Length
                          }else{
-                            $label.Text = $_.Value
+                            $textBox.Text = $_.Value
                          }
-                         $usersTab.Controls.Add($label)
+                         $usersTab.Controls.Add($textBox)
                          $form.Refresh()
                      }
                  }
