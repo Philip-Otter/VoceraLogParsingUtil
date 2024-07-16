@@ -94,13 +94,13 @@ function Open-Window{
     $form.AutoScale = $true
 
     # Footer
-    $footerLabel = New-Object System.Windows.Forms.Label
+    $footerLabel = [System.Windows.Forms.Label]::new()
     $footerLabel.Location = New-Object System.Drawing.Point(230,530)
     $footerLabel.Text = $authorStamp
 
     # Tabs
     Write-Host "BUILDING TABS" -BackgroundColor Gray
-    $tabControl = New-Object System.Windows.Forms.TabControl
+    $tabControl = [System.Windows.Forms.TabControl]::new()
     $tabControl.Width = 560
     $tabControl.Height = 500
     $tabControl.Location = '15,15'
@@ -108,11 +108,11 @@ function Open-Window{
     $tabControl.Anchor = 'Top,Left,Bottom,Right'
 
     # Found Files Tab
-    $foundFilesTab = New-Object System.Windows.Forms.TabPage
+    $foundFilesTab = [System.Windows.Forms.TabPage]::new()
     $foundFilesTab.TabIndex = 1
     $foundFilesTab.Text = 'Found Files'
 
-    $foundFilesBox = New-Object System.Windows.Forms.ListBox
+    $foundFilesBox = [System.Windows.Forms.ListBox]::new()
     $foundFilesBox.Location = New-Object System.Drawing.Point(10,40)
     $foundFilesBox.Size = New-Object System.Drawing.Size(260,20)
     $foundFilesBox.Height = 300
@@ -130,11 +130,11 @@ function Open-Window{
     $foundFilesTab.Controls.Add($foundFilesBox)
 
     # Device Tab
-    $deviceTab = New-Object System.Windows.Forms.TabPage
+    $deviceTab = [System.Windows.Forms.TabPage]::new()
     $deviceTab.TabIndex = 2
     $deviceTab.Text = 'Devices'
 
-    $clientMACBox = New-Object System.Windows.Forms.ListBox
+    $clientMACBox = [System.Windows.Forms.ListBox]::new()
     $clientMACBox.Location = New-Object System.Drawing.Point(10,40)
     $clientMACBox.Height = 300
     $clientMACBox.Width = 125
@@ -145,14 +145,14 @@ function Open-Window{
     }
 
     # Button to load Device
-    $loadDeviceButton = New-Object System.Windows.Forms.Button
+    $loadDeviceButton = [System.Windows.Forms.Button]::new()
     $loadDeviceButton.Location = New-Object System.Drawing.Point(10,340)
     $loadDeviceButton.Height = 20
     $loadDeviceButton.Width = 125
     $loadDeviceButton.TextAlign
     $loadDeviceButton.Text = 'Load Device'
     $loadDeviceButton.Add_Click({
-        $propertyArray = @('ClientType','ClientVersion','MAC','LogFrequency')
+        $propertyArray = @('ClientType', 'ClientVersion', 'MAC', 'LogFrequency')
         $mobilePropertyArray = @('ClientType', 'MobileClientOSVersion', 'ClientVersion', 'MAC', 'MobileClientModel', 'SSID', 'MobileClientCarrier', 'LogFrequency')
         Write-Host "Clicked"
         $selectedMAC = $clientMACBox.SelectedItem
@@ -180,7 +180,7 @@ function Open-Window{
                         # Labels for device traits
                         $deviceDetailsLabelOffsetValue = 50
                         foreach($trait in $voceraMobileDeviceTraits){
-                            $label = New-Object System.Windows.Forms.Label
+                            $label = [System.Windows.Forms.Label]::new()
                             $label.Name = $trait
                             $label.Text = $trait+":"
                             $label.Location = New-Object System.Drawing.Point(225,$deviceDetailsLabelOffsetValue)
@@ -191,7 +191,7 @@ function Open-Window{
                         $traitLabelOffsetValue = 50
                         $device.PSObject.Properties| ForEach-Object{
                             if($mobilePropertyArray -Contains $_.Name){
-                                $textBox = New-Object System.Windows.Forms.TextBox
+                                $textBox = [System.Windows.Forms.TextBox]::new()
                                 $textBox.Text = [System.Web.HttpUtility]::UrlDecode($_.Value)
                                 $textBox.Name = $_.Name
                                 $textBox.BorderStyle = 0
@@ -434,9 +434,9 @@ function Get-VoceraDevices(){
     foreach($mobileDetails in $mobileDetailsList){
         [regex]$mobilePIN = "(?<=WIC\,[ ]querystring\:[ ]PIN\=).+?(\&=?)"  # VCS PIN. THIS VALUE SHOULD ALMOST ALWAYS BE OBSCURED ex. 'PIN=*****'
         [regex]$mobileProto = "(?<=proto\=).+?(?=\&)"
-        [regex]$mobileVersion = "(?<=\&ver\=).+?(?=\&)"  #"(?<=\&ver\=).+?(?=\%)"
+        [regex]$mobileVersion = "(?<=\&ver\=).+?(?=\&)"
         [regex]$mobileDeviceOS = "(?<=[0-9][0-9]\%20).+?(?=\&)"
-        [regex]$mobileDeviceOSVersion = "(?<=osVersion\=).+?(?=\&)"  #"(?<=deviceModel\=).+?(?=\&)"
+        [regex]$mobileDeviceOSVersion = "(?<=osVersion\=).+?(?=\&)"
         [regex]$mobileDeviceModel = "(?<=deviceModel\=).+?(?=\&)"
         [regex]$mobileDeviceMAC = "(?<=MAC\=).+?(?=\&)"
         [regex]$mobileDeviceSSID = "(?<=SSID\=).+?(?=\&)"
