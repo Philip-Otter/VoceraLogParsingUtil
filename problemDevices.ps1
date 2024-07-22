@@ -42,9 +42,10 @@ class VoceraUser{
     [string]    $UserName = "--"
     [string]    $VoceraID = "N/A"
     [string]    $UserID = "--"
-    [string]    $SiteID = "--"
 
+    $siteID = [System.Collections.ArrayList]::new()
     $authentications = [System.Collections.ArrayList]@()
+    $associatedDevices = [System.Collections.ArrayList]::new()
 }
 
 
@@ -79,7 +80,7 @@ function Open-Window{
     Write-Host "Starting GUI" -backgroundColor gray
     $voceraDeviceTraits = @('Client Type', 'Client Version', 'MAC Address', 'Log Frequency')
     $voceraMobileDeviceTraits = @('Client Type', 'OS Version', 'VCS Version', 'MAC Address', 'Model', 'SSID', 'Carrier', 'Log Frequency')
-    $voceraUserTraits = @('Name','Voice ID','VMP ID', 'Site ID', 'Auth Count')
+    $voceraUserTraits = @('Name','Voice ID','VMP ID', 'Site ID', 'Auth Count', 'Associated Devices')
     $VMPServerTraitsA = @('Users Cached','User Cache Date','User Cache Time','Caching Time (ms)', 'HTTP Start Date', 'HTTP Start Time')
     $VMPServerTraitsB = @('DLs Cached','DL Cache Date','DL Cache Time','Caching Time (ms)', 'HTTP Port', 'HTTPS Port')
 
@@ -279,7 +280,7 @@ function Open-Window{
      $loadUserButton.TextAlign
      $loadUserButton.Text = 'Load User'
      $loadUserButton.Add_Click({
-         $propertyArray= @('UserName','VoceraID','UserID', 'SiteID', 'authentications')
+         $propertyArray= @('UserName','VoceraID','UserID', 'siteID', 'authentications', 'associatedDevices')
          Write-Host "Clicked"
          $selectedUser = $usersBox.SelectedItem
          Write-Host "Selected User ID:  $selectedUser"
@@ -476,19 +477,25 @@ function Get-VoceraDevices(){
 }
 
 
-function Get-UserIDAssociations($UserID){
+function Get-UserIDAssociations($userObject){
     $siteIDList = [System.Collections.ArrayList]::new()
+    $macAssociationsList = [System.Collections.ArrayList]::new()  # Also the same line that contains DND and voice forwarding information
+    $userID = $userObject.UserID
     foreach($file in $logFiles){
         Get-Content $file | Select-String "in database, UserID: $userID" | ForEach-Object{$siteIDList.Add($_)}
+        Get-Content $file | Select-String ", userID=$userID, VoicePresence" | ForEach-Object{$macAssociationsList.Add($_)}
     }
     foreach($siteIDLine in $siteIDList){
         [regex]$siteIDRegex = "(?<=\,[ ]SiteID\:[ ]).+"
-        Write-Host $siteIDLine -BackgroundColor Gray
+
+        $siteID = $siteIDRegex.Matches($siteIDLine) | ForEach-Object {$_.Value}
+        $userObject.siteID.add($siteID)
     }
-    foreach($VMPUser in $AllDevices.userList){
-        if($VMPUser.UserID -eq $userID){
-            $VMPUser.SiteID = $siteIDRegex.Matches($siteIDLine) | ForEach-Object {$_.Value}
-        }
+    foreach($macAssociationLine in $macAssociationsList){
+        [regex]$macRegex = "(?<=\,[ ]MACAddress\:).{12}"
+        
+        $associatedMAC = $macRegex.Matches($macAssociationLine) | ForEach-Object {$_.Value}
+        $userObject.associatedDevices.add($associatedMAC)
     }
 }
 
