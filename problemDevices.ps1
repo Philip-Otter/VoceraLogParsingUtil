@@ -326,8 +326,25 @@ function Open-Window{
         $userDetailsLabelOffsetValue = $userDetailsLabelOffsetValue + 50
     }
 
+    # Button to display all user object properties
+    $userObjectPropertiesButton = New-Object System.Windows.Forms.Button
+    $userObjectPropertiesButton.Location = New-Object System.Drawing.Point(10,360)
+    $userObjectPropertiesButton.Height = 20
+    $userObjectPropertiesButton.Width = 175
+    $userObjectPropertiesButton.TextAlign
+    $userObjectPropertiesButton.Text = 'Object Properties'
+    $userObjectPropertiesButton.Add_Click({
+        $selectedUser = $usersBox.SelectedItem
+        foreach($userObject in $AllDevices.userList){
+            if($userObject.UserName -eq $selectedUser){
+                $userObject | Select-Object * | Out-GridView
+                break
+            }
+        }
+    })
+
     # Add Elements to Users Tab
-    $usersTab.Controls.AddRange(@($usersBox,$loadUserButton))
+    $usersTab.Controls.AddRange(@($usersBox,$loadUserButton,$userObjectPropertiesButton))
 
     # VMP Server Tab
     $VMPServerTab = New-Object System.Windows.Forms.TabPage
