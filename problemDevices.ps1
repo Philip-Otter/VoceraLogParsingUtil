@@ -303,7 +303,7 @@ function Open-Window{
                          $textBox.Location = New-Object System.Drawing.Point(350,$deviceDetailsLabelOffsetValue)
                          $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
                          if($_.Name -eq 'authentications'){
-                            $textBox.Text = $_.Length
+                            $textBox.Text = $_.Value.Count
                          }else{
                             $textBox.Text = $_.Value
                          }
