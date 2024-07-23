@@ -44,7 +44,7 @@ class VoceraUser{
     [string]    $UserID = "--"
 
     $siteID = [System.Collections.ArrayList]::new()
-    $authentications = [System.Collections.ArrayList]@()
+    $authentications = [System.Collections.ArrayList]::new()
     $associatedDevices = [System.Collections.ArrayList]::new()
 }
 
@@ -96,7 +96,7 @@ function Open-Window{
 
     # Footer
     $footerLabel = [System.Windows.Forms.Label]::new()
-    $footerLabel.Location = New-Object System.Drawing.Point(230,530)
+    $footerLabel.Location = [System.Drawing.Point]::new(230,530)
     $footerLabel.Text = $authorStamp
 
     # Tabs
@@ -114,8 +114,8 @@ function Open-Window{
     $foundFilesTab.Text = 'Found Files'
 
     $foundFilesBox = [System.Windows.Forms.ListBox]::new()
-    $foundFilesBox.Location = New-Object System.Drawing.Point(10,40)
-    $foundFilesBox.Size = New-Object System.Drawing.Size(260,20)
+    $foundFilesBox.Location = [System.Drawing.Point]::new(10,140) 
+    $foundFilesBox.Size = [System.Drawing.Size]::new(260,20)
     $foundFilesBox.Height = 300
     $foundFilesBox.Width = 350
     $foundFilesBox.HorizontalScrollbar = $true
@@ -136,7 +136,7 @@ function Open-Window{
     $deviceTab.Text = 'Devices'
 
     $clientMACBox = [System.Windows.Forms.ListBox]::new()
-    $clientMACBox.Location = New-Object System.Drawing.Point(10,40)
+    $clientMACBox.Location = [System.Drawing.Point]::new(10,40)
     $clientMACBox.Height = 300
     $clientMACBox.Width = 125
     $clientMACBox.Sorted = $true
@@ -147,7 +147,7 @@ function Open-Window{
 
     # Button to load Device
     $loadDeviceButton = [System.Windows.Forms.Button]::new()
-    $loadDeviceButton.Location = New-Object System.Drawing.Point(10,340)
+    $loadDeviceButton.Location = [System.Drawing.Point]::new(10,340)
     $loadDeviceButton.Height = 20
     $loadDeviceButton.Width = 125
     $loadDeviceButton.TextAlign
@@ -184,7 +184,7 @@ function Open-Window{
                             $label = [System.Windows.Forms.Label]::new()
                             $label.Name = $trait
                             $label.Text = $trait+":"
-                            $label.Location = New-Object System.Drawing.Point(225,$deviceDetailsLabelOffsetValue)
+                            $label.Location = [System.Drawing.Point]::new(225,$deviceDetailsLabelOffsetValue)
                             $deviceTab.Controls.Add($label)
                             $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
                         }
@@ -197,7 +197,7 @@ function Open-Window{
                                 $textBox.Name = $_.Name
                                 $textBox.BorderStyle = 0
                                 $textBox.BackColor = $form.BackColor
-                                $textBox.Location = New-Object System.Drawing.Point(350,$traitLabelOffsetValue)
+                                $textBox.Location = [System.Drawing.Point]::new(350,$traitLabelOffsetValue)
                                 $deviceTab.Controls.Add($textBox)
                                 $traitLabelOffsetValue = $traitLabelOffsetValue + 50
                                 $form.Refresh()
@@ -210,21 +210,21 @@ function Open-Window{
                         # Labels for device traits
                         $deviceDetailsLabelOffsetValue = 100
                         foreach($trait in $voceraDeviceTraits){
-                            $label = New-Object System.Windows.Forms.Label
+                            $label = [System.Windows.Forms.Label]::new()
                             $label.Name = $trait
                             $label.Text = $trait+":"
-                            $label.Location = New-Object System.Drawing.Point(225,$deviceDetailsLabelOffsetValue)
+                            $label.Location = [System.Drawing.Point]::new(225,$deviceDetailsLabelOffsetValue)
                             $deviceTab.Controls.Add($label)
                             $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
                         }
                         $device.PSObject.Properties| ForEach-Object{
                             if($propertyArray -Contains $_.Name){
-                                $textBox = New-Object System.Windows.Forms.TextBox
+                                $textBox = [System.Windows.Forms.TextBox]::new()
                                 $textBox.Text = $_.Value
                                 $textBox.Name = $_.Name
                                 $textBox.BorderStyle = 0
                                 $textBox.BackColor = $form.BackColor
-                                $textBox.Location = New-Object System.Drawing.Point(350,$traitLabelOffsetValue)
+                                $textBox.Location = [System.Drawing.Point]::new(350,$traitLabelOffsetValue)
                                 $deviceTab.Controls.Add($textBox)
                                 $traitLabelOffsetValue = $traitLabelOffsetValue + 50
                                 $form.Refresh()
@@ -237,8 +237,8 @@ function Open-Window{
     })
 
     # Button to get all object (device) properties
-    $deviceObjectPropertiesButton = New-Object System.Windows.Forms.Button
-    $deviceObjectPropertiesButton.Location = New-Object System.Drawing.Point(10,360)
+    $deviceObjectPropertiesButton = [System.Windows.Forms.Button]::new()
+    $deviceObjectPropertiesButton.Location = [System.Drawing.Point]::new(10,360)
     $deviceObjectPropertiesButton.Height = 20
     $deviceObjectPropertiesButton.Width = 125
     $deviceObjectPropertiesButton.TextAlign
@@ -257,12 +257,12 @@ function Open-Window{
     $deviceTab.Controls.AddRange(@($clientMACBox, $loadDeviceButton, $deviceObjectPropertiesButton))
 
     # Users Tab
-    $usersTab = New-Object System.Windows.Forms.tabPage
+    $usersTab = [System.Windows.Forms.tabPage]::new()
     $usersTab.TabIndex = 3
     $usersTab.Text = 'Users'
 
-    $usersBox = New-Object System.Windows.Forms.ListBox
-    $usersBox.Location = New-Object System.Drawing.Point(10,40)
+    $usersBox = [System.Windows.Forms.ListBox]::new()
+    $usersBox.Location = [System.Drawing.Point]::new(10,40)
     $usersBox.Height = 300
     $usersBox.Width = 175
     $usersBox.Sorted = $true
@@ -273,8 +273,8 @@ function Open-Window{
     }
 
      # Button to load User
-     $loadUserButton = New-Object System.Windows.Forms.Button
-     $loadUserButton.Location = New-Object System.Drawing.Point(10,340)
+     $loadUserButton = [System.Windows.Forms.Button]::new()
+     $loadUserButton.Location = [System.Drawing.Point]::new(10,340)
      $loadUserButton.Height = 20
      $loadUserButton.Width = 175
      $loadUserButton.TextAlign
@@ -291,16 +291,15 @@ function Open-Window{
                  $deviceDetailsLabelOffsetValue = 100
                  $voceraUser.PSObject.Properties| ForEach-Object{
                      if($propertyArray -Contains $_.Name){
-                         Write-Host "Writing Trait:  " $_.Name
                          # Check for and remove old information already loaded for a different device
                          if($usersTab.Controls.ContainsKey($_.Name)){
                              $usersTab.Controls.RemoveByKey($_.Name)
                          }
-                         $textBox = New-Object System.Windows.Forms.TextBox
+                         $textBox = [System.Windows.Forms.TextBox]::new()
                          $textBox.Name = $_.Name
                          $textBox.BorderStyle = 0
                          $textBox.BackColor = $form.BackColor
-                         $textBox.Location = New-Object System.Drawing.Point(350,$deviceDetailsLabelOffsetValue)
+                         $textBox.Location = [System.Drawing.Point]::new(350,$deviceDetailsLabelOffsetValue)
                          $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
                          if($_.Name -eq 'authentications'){
                             $textBox.Text = $_.Value.Count
@@ -319,16 +318,16 @@ function Open-Window{
     # Labels for User traits
     $userDetailsLabelOffsetValue = 100
     foreach($trait in $voceraUserTraits){
-        $label = New-Object System.Windows.Forms.Label
+        $label = [System.Windows.Forms.Label]::new()
         $label.Text = $trait+":"
-        $label.Location = New-Object System.Drawing.Point(250,$userDetailsLabelOffsetValue)
+        $label.Location = [System.Drawing.Point]::new(250,$userDetailsLabelOffsetValue)
         $usersTab.Controls.Add($label)
         $userDetailsLabelOffsetValue = $userDetailsLabelOffsetValue + 50
     }
 
     # Button to display all user object properties
-    $userObjectPropertiesButton = New-Object System.Windows.Forms.Button
-    $userObjectPropertiesButton.Location = New-Object System.Drawing.Point(10,360)
+    $userObjectPropertiesButton = [System.Windows.Forms.Button]::new()
+    $userObjectPropertiesButton.Location = [System.Drawing.Point]::new(10,360)
     $userObjectPropertiesButton.Height = 20
     $userObjectPropertiesButton.Width = 175
     $userObjectPropertiesButton.TextAlign
@@ -363,7 +362,7 @@ function Open-Window{
     $usersTab.Controls.AddRange(@($usersBox,$loadUserButton,$userObjectPropertiesButton,$userAssociationsButton))
 
     # VMP Server Tab
-    $VMPServerTab = New-Object System.Windows.Forms.TabPage
+    $VMPServerTab = [System.Windows.Forms.TabPage]::new()
     $VMPServerTab.TabIndex = 4
     $VMPServerTab.Text = 'VMP Server'
 
@@ -377,9 +376,9 @@ function Open-Window{
             }elseif($VMPServerTraitsB -contains $trait){
                 $horrizontalOffset = 250
             }
-            $label = New-Object System.Windows.Forms.Label
+            $label = [System.Windows.Forms.Label]::new()
             $label.Text = $trait+":"
-            $label.Location = New-Object System.Drawing.Point($horrizontalOffset,$deviceDetailsLabelOffsetValue)
+            $label.Location = [System.Drawing.Point]::new($horrizontalOffset,$deviceDetailsLabelOffsetValue)
             $VMPServerTab.Controls.Add($label)
             $deviceDetailsLabelOffsetValue = $deviceDetailsLabelOffsetValue + 50
         }
@@ -393,16 +392,16 @@ function Open-Window{
         $sideB = @('LastDistCache', 'LastDistCacheDate', 'LastDistCacheTime', 'LastDistCacheTimeDuration', 'LastDistCacheTimeDuration', 'LastHTTPPort', 'LastHTTPSPort')
         if($sideA -contains $_.Name){
             $horrizontalOffset = 130
-            $label = New-Object System.Windows.Forms.Label
+            $label = [System.Windows.Forms.Label]::new()
             $label.Text = $_.Value
-            $label.Location = New-Object System.Drawing.Point($horrizontalOffset,$deviceDetailsLabelOffsetValueA)
+            $label.Location = [System.Drawing.Point]::new($horrizontalOffset,$deviceDetailsLabelOffsetValueA)
             $VMPServerTab.Controls.Add($label)
             $deviceDetailsLabelOffsetValueA = $deviceDetailsLabelOffsetValueA + 50
         }elseif($sideB -contains $_.Name){
             $horrizontalOffset = 370
-            $label = New-Object System.Windows.Forms.Label
+            $label = [System.Windows.Forms.Label]::new()
             $label.Text = $_.Value
-            $label.Location = New-Object System.Drawing.Point($horrizontalOffset,$deviceDetailsLabelOffsetValueB)
+            $label.Location = [System.Drawing.Point]::new($horrizontalOffset,$deviceDetailsLabelOffsetValueB)
             $VMPServerTab.Controls.Add($label)
             $deviceDetailsLabelOffsetValueB = $deviceDetailsLabelOffsetValueB + 50
         }else{
