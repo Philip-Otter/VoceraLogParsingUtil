@@ -343,8 +343,24 @@ function Open-Window{
         }
     })
 
+    # Button to load user site ID and device associations
+    $userAssociationsButton = [System.Windows.Forms.Button]::new()
+    $userAssociationsButton.Location = [System.Drawing.Point]::new(10,380)
+    $userAssociationsButton.Height = 20
+    $userAssociationsButton.Width = 175
+    $userAssociationsButton.TextAlign
+    $userAssociationsButton.Text = "Find Associations"
+    $userAssociationsButton.Add_Click({
+        $selectedUser = $usersBox.SelectedItem
+        foreach($userObject in $AllDevices.userList){
+            if($userObject.UserName -eq $selectedUser){
+                Get-UserIDAssociations($userObject)
+            }
+        }
+    })
+
     # Add Elements to Users Tab
-    $usersTab.Controls.AddRange(@($usersBox,$loadUserButton,$userObjectPropertiesButton))
+    $usersTab.Controls.AddRange(@($usersBox,$loadUserButton,$userObjectPropertiesButton,$userAssociationsButton))
 
     # VMP Server Tab
     $VMPServerTab = New-Object System.Windows.Forms.TabPage
