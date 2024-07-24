@@ -92,7 +92,7 @@ function Open-Window{
     }
 
     # Main Form
-    $form.Text = "Vocera Log Parser - Version $applicationVersion"
+    $form.Text = "Vocera VMP Log Parser - Version $applicationVersion"
     $form.Width = 600
     $form.Height = 600
     $form.AutoScale = $true
@@ -106,7 +106,7 @@ function Open-Window{
     # Tabs
     Write-Host "BUILDING TABS" -BackgroundColor Gray
     $tabControl = [System.Windows.Forms.TabControl]::new()
-    $tabControl.Width = 560
+    $tabControl.Width = 555
     $tabControl.Height = 500
     $tabControl.Location = '15,15'
     $tabControl.AutoSize = $true
