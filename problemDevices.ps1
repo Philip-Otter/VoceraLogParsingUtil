@@ -96,6 +96,7 @@ function Open-Window{
     $form.Width = 600
     $form.Height = 600
     $form.AutoScale = $true
+    $form.StartPosition = "CenterScreen"
 
     # Footer
     $footerLabel = [System.Windows.Forms.Label]::new()
