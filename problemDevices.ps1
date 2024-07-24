@@ -46,6 +46,9 @@ class VoceraUser{
     $siteID = [System.Collections.ArrayList]::new()
     $authentications = [System.Collections.ArrayList]::new()
     $associatedDevices = [System.Collections.ArrayList]::new()
+
+    [string]    $UserEmail = "--"
+    $deviceIDs = [System.Collections.ArrayList]::new()
 }
 
 
@@ -509,6 +512,22 @@ function Get-VoceraDevices(){
 }
 
 
+function Get-UserEmailAndDeviceID($userObject){
+    $syncLines = [System.Collections.ArrayList]::new()
+    foreach($file in $logFiles){
+        $matchString = $userObject.UserName
+        Get-Content $file | Select-String "Sync[:].+Name:$matchString" | ForEach-Object{$syncLines.Add($_)}
+    }
+    foreach($line in $syncLines){
+        [regex]$userEmailRegex = "(?<=Email:).+?(?=\,)"
+        [regex]$deviceIDRegex = "(?<=PIN:).+"
+
+        $userObject.UserEmail = $userEmailRegex.Matches($line) | ForEach-Object {$_.Value}
+        $userObject.deviceIDs = $deviceIDRegex.Matches($line) | ForEach-Object {$_.Value}
+    }
+}
+
+
 function Get-UserIDAssociations($userObject){
     $siteIDList = [System.Collections.ArrayList]::new()
     $macAssociationsList = [System.Collections.ArrayList]::new()  # Also the same line that contains DND and voice forwarding information
@@ -577,8 +596,8 @@ function Get-UserAuthentications(){
             }
         }
     }
-
 }
+
 
 function Get-VMPServerInformation(){
     $userCacheList = [System.Collections.ArrayList]::new()
