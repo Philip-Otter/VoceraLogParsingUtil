@@ -413,8 +413,13 @@ function Open-Window{
         }
     }
 
+    # Add Error Tab
+    $errorTab = [System.Windows.Forms.TabPage]::new()
+    $errorTab.TabIndex = 5
+    $errorTab.Text = "Errors"
+
     # Add tabpages to tab control
-    $tabControl.Controls.AddRange(@($foundFilesTab, $deviceTab, $usersTab, $VMPServerTab))
+    $tabControl.Controls.AddRange(@($foundFilesTab, $deviceTab, $usersTab, $VMPServerTab, $errorTab))
     
     # Add items to main form
     $form.Controls.Add($footerLabel)
