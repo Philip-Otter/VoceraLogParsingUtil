@@ -112,10 +112,10 @@ function Open-Window{
     $tabControl.AutoSize = $true
     $tabControl.Anchor = 'Top,Left,Bottom,Right'
 
-    # Found Files Tab
-    $foundFilesTab = [System.Windows.Forms.TabPage]::new()
-    $foundFilesTab.TabIndex = 1
-    $foundFilesTab.Text = 'Found Files'
+    # Home Tab
+    $homeTab = [System.Windows.Forms.TabPage]::new()
+    $homeTab.TabIndex = 1
+    $homeTab.Text = 'Home'
 
     $foundFilesBox = [System.Windows.Forms.ListBox]::new()
     $foundFilesBox.Location = [System.Drawing.Point]::new(10,140) 
@@ -132,7 +132,7 @@ function Open-Window{
     }
 
     # Add elements to Found Files tab
-    $foundFilesTab.Controls.Add($foundFilesBox)
+    $homeTab.Controls.Add($foundFilesBox)
 
     # Device Tab
     $deviceTab = [System.Windows.Forms.TabPage]::new()
@@ -419,7 +419,7 @@ function Open-Window{
     $errorTab.Text = "Errors"
 
     # Add tabpages to tab control
-    $tabControl.Controls.AddRange(@($foundFilesTab, $deviceTab, $usersTab, $VMPServerTab, $errorTab))
+    $tabControl.Controls.AddRange(@($homeTab, $deviceTab, $usersTab, $VMPServerTab, $errorTab))
     
     # Add items to main form
     $form.Controls.Add($footerLabel)
