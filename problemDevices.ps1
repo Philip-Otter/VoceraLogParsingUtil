@@ -52,11 +52,23 @@ class VoceraUser{
 }
 
 
+class ErrorMesssage{
+    [string]    $SourceType = "--" # This is either a line or a File
+    [string]    $LogType = "--" # INFO, VERBOSE, WARNING
+    [string]    $Date = "--/--/--"
+    [string]    $Time = "--:--:--"
+    [string]    $ErrorCode = "--"
+    [string]    $Message = "--"
+    [string]    $FullError = "-----"
+}
+
+
 class VoceraDeviceList{
     $deviceList = [System.Collections.ArrayList]::new()
     $macList = [System.Collections.ArrayList]::new()
     $userList = [System.Collections.ArrayList]::new()
     $userNameList = [System.Collections.ArrayList]::new()
+    $errorObjects = [System.Collections.ArrayList]::new()
 }
 
 class VoceraClientDevice {
@@ -367,7 +379,7 @@ function Open-Window{
 
     # VMP Server Tab
     $VMPServerTab = [System.Windows.Forms.TabPage]::new()
-    $VMPServerTab.TabIndex = 4
+    $VMPServerTab.TabIndex = 5
     $VMPServerTab.Text = 'VMP Server'
 
     # Labels for VMP Server Traits
@@ -415,11 +427,23 @@ function Open-Window{
 
     # Add Error Tab
     $errorTab = [System.Windows.Forms.TabPage]::new()
-    $errorTab.TabIndex = 5
+    $errorTab.TabIndex = 4
     $errorTab.Text = "Errors"
 
+    $errorsBox = [System.Windows.Forms.ListBox]::new()
+    $errorsBox.Location = [System.Drawing.Point]::new(10,40)
+    $errorsBox.Height = 300
+    $errorsBox.Width = 500
+    $errorsBox.Sorted = $true
+
+    foreach($errorTypeInstance in $AllDevices.errorObjects){
+        $errorsBox.Items.Add($errorTypeInstance.Date + " - " + $errorTypeInstance.Time + " - " + $errorTypeInstance.Message)
+    }
+
+    $errorTab.Controls.AddRange(@($errorsBox))
+
     # Add tabpages to tab control
-    $tabControl.Controls.AddRange(@($homeTab, $deviceTab, $usersTab, $VMPServerTab, $errorTab))
+    $tabControl.Controls.AddRange(@($homeTab, $deviceTab, $usersTab, $errorTab, $VMPServerTab))
     
     # Add items to main form
     $form.Controls.Add($footerLabel)
@@ -427,6 +451,48 @@ function Open-Window{
 
     Draw
 
+}
+
+
+function Get-WarningInformation($errorObject){
+    [regex]$warnMessageRegex = "(?<=[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\.[0-9][0-9][0-9][ ]).+"
+    $errorObject.Message = $warnMessageRegex.Matches($errorObject.FullError) | ForEach-Object {$_.Value}
+}
+
+
+function Get-ErrorLines{
+    $errorStringList = [System.Collections.ArrayList]::new()
+    foreach($file in $logFiles){
+        Get-Content $file | Select-String "error:" | ForEach-Object{$errorStringList.Add($_)}
+    }
+    [regex]$logTypeRegex = "[A-Z]{3,}"
+    [regex]$dateRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
+    [regex]$timeRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
+    [regex]$errorCodeRegex = "((?<=error\:[ ])|(?<=error:[ ]\())\d+"
+    [regex]$messageRegex = "(((?<=error[ ]message\:[ ])|(?<=)Execution error\:)|(?<=Curl Error\:[ ])).+"
+
+    foreach($errorLine in $errorStringList){
+        $logType = $logTypeRegex.Matches($errorLine) | ForEach-Object {$_.Value}
+        $date = $dateRegex.Matches($errorLine) | ForEach-Object {$_.Value}
+        $time = $timeRegex.Matches($errorLine) | ForEach-Object {$_.Value}
+        $errorCode = $errorCodeRegex.Matches($errorLine) | ForEach-Object {$_.Value}
+        $message = $messageRegex.Matches($errorLine) | ForEach-Object {$_.Value}
+
+        $errorObject = [ErrorMesssage]::new()
+        $errorObject.SourceType = "Log Line"
+        $errorObject.LogType = $logType
+        $errorObject.Date = $date
+        $errorObject.Time = $time
+        $errorObject.ErrorCode = $errorCode
+        $errorObject.Message = $message
+        $errorObject.FullError = $errorLine
+
+        if($errorObject.LogType -eq "WARNING"){
+            Get-WarningInformation($errorObject)
+        }
+
+        $AllDevices.errorObjects.Add($errorObject)
+    }
 }
 
 
@@ -683,5 +749,7 @@ Write-Host "Finding Authentications" -ForegroundColor Cyan
 Get-UserAuthentications
 Write-Host "Gathering VMP Server Information" -ForegroundColor Cyan
 Get-VMPServerInformation
+Write-Host "Parsing Errors" -ForegroundColor Cyan
+Get-ErrorLines
 Write-Host "LAUNCH WORK DONE" -ForegroundColor Green
 Open-Window
