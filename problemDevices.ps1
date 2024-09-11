@@ -433,14 +433,32 @@ function Open-Window{
     $errorsBox = [System.Windows.Forms.ListBox]::new()
     $errorsBox.Location = [System.Drawing.Point]::new(10,40)
     $errorsBox.Height = 300
-    $errorsBox.Width = 500
+    $errorsBox.Width = 525
     $errorsBox.Sorted = $true
+    $errorsBox.HorizontalScrollbar = $true
 
     foreach($errorTypeInstance in $AllDevices.errorObjects){
-        $errorsBox.Items.Add($errorTypeInstance.Date + " - " + $errorTypeInstance.Time + " - " + $errorTypeInstance.Message)
+        $errorsBox.Items.Add($errorTypeInstance.Date + " - " + $errorTypeInstance.Time + " -  " + $errorTypeInstance.Message + " - " + $errorTypeInstance.LogType)
     }
 
-    $errorTab.Controls.AddRange(@($errorsBox))
+    $errorObjectPropertiesButton = [System.Windows.Forms.Button]::new()
+    $errorObjectPropertiesButton.Location = [System.Drawing.Point]::new(10,360)
+    $errorObjectPropertiesButton.Height = 20
+    $errorObjectPropertiesButton.Width = 175
+    $errorObjectPropertiesButton.TextAlign
+    $errorObjectPropertiesButton.Text = 'Object Properties'
+    $errorObjectPropertiesButton.Add_Click({
+        $selectedError = $errorsBox.SelectedItem
+        foreach($errorObject in $AllDevices.errorObjects){
+            [regex] $timeRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
+            if($errorObject.Time -eq $timeRegex.Match($selectedError)){
+                $errorObject | Select-Object * | Out-GridView
+                break
+            }
+        }
+    })
+
+    $errorTab.Controls.AddRange(@($errorsBox, $errorObjectPropertiesButton))
 
     # Add tabpages to tab control
     $tabControl.Controls.AddRange(@($homeTab, $deviceTab, $usersTab, $errorTab, $VMPServerTab))
@@ -489,6 +507,10 @@ function Get-ErrorLines{
 
         if($errorObject.LogType -eq "WARNING"){
             Get-WarningInformation($errorObject)
+        }
+
+        if($errorObject.Message -eq ""){
+            $errorObject.Message = $errorObject.FullError -replace "INFO|VERBOSE|Warning", "" -replace "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]", "" -replace "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])", ""
         }
 
         $AllDevices.errorObjects.Add($errorObject)
