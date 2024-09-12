@@ -430,6 +430,28 @@ function Open-Window{
     $errorTab.TabIndex = 4
     $errorTab.Text = "Errors"
 
+    # Add Error Type Selection Dropdown
+    $errorTypeDropdown = [System.Windows.Forms.ComboBox]::new()
+    $errorTypeDropdown.Location = [System.Drawing.Point]::new(10, 10)
+    $errorTypeDropdown.Height = 10
+    $errorTypeDropdown.Width = 150
+    $errorTypeDropdown.Sorted = $true
+
+    # Get unique error types and add them to the dropdown list
+    $uniqErrorTypes = [System.Collections.ArrayList]::new(@("ALL"))
+    foreach($errorTypeInstance in $AllDevices.errorObjects){
+        if($uniqErrorTypes -contains $errorTypeInstance.LogType){
+            continue
+        }else{
+            $uniqErrorTypes.Add($errorTypeInstance.LogType)
+        }
+    }
+
+    foreach($item in $uniqErrorTypes){
+        $errorTypeDropdown.Items.Add($item)
+    }
+
+    # Add listbox to contain error messages
     $errorsBox = [System.Windows.Forms.ListBox]::new()
     $errorsBox.Location = [System.Drawing.Point]::new(10,40)
     $errorsBox.Height = 300
@@ -437,10 +459,12 @@ function Open-Window{
     $errorsBox.Sorted = $true
     $errorsBox.HorizontalScrollbar = $true
 
+    # Add errors to listbox
     foreach($errorTypeInstance in $AllDevices.errorObjects){
         $errorsBox.Items.Add($errorTypeInstance.Date + " - " + $errorTypeInstance.Time + " -  " + $errorTypeInstance.Message + " - " + $errorTypeInstance.LogType)
     }
 
+    # Add object properties button to error tab
     $errorObjectPropertiesButton = [System.Windows.Forms.Button]::new()
     $errorObjectPropertiesButton.Location = [System.Drawing.Point]::new(10,360)
     $errorObjectPropertiesButton.Height = 20
@@ -458,7 +482,8 @@ function Open-Window{
         }
     })
 
-    $errorTab.Controls.AddRange(@($errorsBox, $errorObjectPropertiesButton))
+    # Link controls to the error tab
+    $errorTab.Controls.AddRange(@($errorsBox, $errorObjectPropertiesButton, $errorTypeDropdown))
 
     # Add tabpages to tab control
     $tabControl.Controls.AddRange(@($homeTab, $deviceTab, $usersTab, $errorTab, $VMPServerTab))
@@ -481,16 +506,16 @@ function Get-WarningInformation($errorObject){
 function Get-ErrorLines{
     $errorStringList = [System.Collections.ArrayList]::new()
     foreach($file in $logFiles){
-        Get-Content $file | Select-String "error:" | ForEach-Object{$errorStringList.Add($_)}
+        Get-Content $file | Select-String "error:|WARNING" | ForEach-Object{$errorStringList.Add($_)}
     }
-    [regex]$logTypeRegex = "[A-Z]{3,}"
+    [regex]$logTypeRegex = "[A-Z]{3,8}"
     [regex]$dateRegex = "[0-3][0-9]\/[0-1][0-9]\/[0-9][0-9]"
     [regex]$timeRegex = "[0-2][0-9]\:[0-6][0-9]\:[0-6][0-9]\..+?(?=[ ])"
     [regex]$errorCodeRegex = "((?<=error\:[ ])|(?<=error:[ ]\())\d+"
     [regex]$messageRegex = "(((?<=error[ ]message\:[ ])|(?<=)Execution error\:)|(?<=Curl Error\:[ ])).+"
 
     foreach($errorLine in $errorStringList){
-        $logType = $logTypeRegex.Matches($errorLine) | ForEach-Object {$_.Value}
+        $logType = $logTypeRegex.Match($errorLine) | ForEach-Object {$_.Value}
         $date = $dateRegex.Matches($errorLine) | ForEach-Object {$_.Value}
         $time = $timeRegex.Matches($errorLine) | ForEach-Object {$_.Value}
         $errorCode = $errorCodeRegex.Matches($errorLine) | ForEach-Object {$_.Value}
@@ -764,13 +789,13 @@ foreach($logPath in $logPathList){
 
 
 Write-Host "Building Devices" -ForegroundColor Cyan
-Get-VoceraDevices
+#Get-VoceraDevices
 Write-Host "Building Users" -ForegroundColor Cyan
-Get-VocerLogUsers
+#Get-VocerLogUsers
 Write-Host "Finding Authentications" -ForegroundColor Cyan
-Get-UserAuthentications
+#Get-UserAuthentications
 Write-Host "Gathering VMP Server Information" -ForegroundColor Cyan
-Get-VMPServerInformation
+#Get-VMPServerInformation
 Write-Host "Parsing Errors" -ForegroundColor Cyan
 Get-ErrorLines
 Write-Host "LAUNCH WORK DONE" -ForegroundColor Green
